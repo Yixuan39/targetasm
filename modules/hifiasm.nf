@@ -17,17 +17,14 @@ process hifiasm_reassemble {
     """
     set -euo pipefail
 
-    work_dir=asm_${reads.simpleName}
-    mkdir -p \${work_dir}
-
     hifiasm \
         -t ${task.cpus} \
         ${params.hifiasm_option ?: '-l 1'} \
         --primary \
-        -o \${work_dir}/asm \
+        -o asm \
         ${reads}
 
-    gfatools gfa2fa \${work_dir}/asm.p_ctg.gfa \
+    gfatools gfa2fa asm.p_ctg.gfa \
         | pigz -p ${task.cpus} > ${reads.simpleName}.fasta.gz
     """
 }

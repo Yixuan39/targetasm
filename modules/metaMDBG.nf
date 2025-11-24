@@ -16,10 +16,10 @@ process metamdbg_assemble {
     script:
     """
     metaMDBG asm \
-        --out-dir metaMDBG_out \
+        --out-dir . \
         --in-hifi ${reads} \
         --threads ${task.cpus}
 
-    mv metaMDBG_out/contigs.fasta.gz ${reads.simpleName}.fasta.gz
+    mv contigs.fasta.gz ${reads.simpleName}.fasta.gz
     """
 }

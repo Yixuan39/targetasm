@@ -21,24 +21,18 @@ process fcs_gx_clean {
     set -euo pipefail
     export GX_NUM_CORES=${task.cpus}
 
-    tmp_dir=$(mktemp -d)
-    trap 'rm -rf \${tmp_dir}' EXIT
-
-    # 1. Run screening (writes report files inside the temp dir)
+    # 1. Run screening (writes report files into the work directory)
     run_gx.py \
         --fasta ${assembly} \
         --tax-id ${tax_id} \
         --gx-db ${gx_db} \
-        --out-dir \${tmp_dir} \
+        --out-dir . \
         --out-basename fcs_gx
 
     # 2. Clean genome using the generated report
     gx clean-genome \
         --input ${assembly} \
-        --action-report \${tmp_dir}/fcs_gx.fcs_gx_report.txt \
+        --action-report fcs_gx.fcs_gx_report.txt \
         --output fcs_gx.clean.fasta
-
-    # 3. Collect outputs in the work directory
-    mv \${tmp_dir}/fcs_gx.fcs_gx_report.txt fcs_gx.fcs_gx_report.txt
     """
 }
