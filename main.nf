@@ -6,15 +6,37 @@ include { minimap2_align } from './modules/minimap2.nf'
 include { rasusa_subset } from './modules/rasusa.nf'
 include { hifiasm_reassemble } from './modules/hifiasm.nf'
 
-params.reads = params.reads ?: null
-params.gx_db = params.gx_db ?: null
-params.tax_id = params.tax_id ?: null
-params.rasusa_bases = params.rasusa_bases ?: null
-params.outdir = params.outdir ?: "results"
-params.threads = params.threads ?: 24
-
 workflow {
     main:
+                if (params.help) {
+                        log.info """
+TEA (Target Eukaryotic genome Assembly)
+
+Usage:
+    nextflow run main.nf \\
+        --reads <reads.fastq.gz> \\
+        --gx_db <path/to/gx-db-prefix> \\
+        --tax_id <ncbi_tax_id> \\
+        --rasusa_bases <bases> \\
+        --threads <int> \\
+        --hifiasm_option '<opts>' \\
+        --outdir <results_dir>
+
+Parameters:
+    --reads            Input PacBio HiFi reads in FASTQ.GZ format (required).
+    --gx_db            Path prefix to the NCBI FCS-GX database bundle (required).
+    --tax_id           NCBI taxonomy identifier used by FCS-GX (required).
+    --rasusa_bases     Optional target number of bases for rasusa downsampling (genome size * coverage);
+                                         omit to retain all mapped reads.
+    --threads          Maximum CPU cores assigned to threaded processes
+                                         (default: ${params.threads}).
+    --hifiasm_option   Extra options passed to hifiasm (default: '-l 1').
+    --outdir           Directory for published outputs (default: ${params.outdir}).
+
+For additional details, consult README.md.
+"""
+            exit 0
+        }
         if (!params.reads) {
             error "Parameter --reads must point to a .fastq.gz file"
         }
