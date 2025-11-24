@@ -17,12 +17,13 @@
 
 ```mermaid
 graph TD
-    RAW["Raw HiFi reads"] --> MDBG["metamdbg assemble"]
+    RAW["Raw HiFi reads"] --> MDBG["metaMDBG assemble"]
     MDBG --> FCS1["fcs-gx clean (round 1)"]
     FCS1 --> MM["minimap2 align"]
     RAW --> MM
     MM --> RAS["rasusa subset"]
-    RAS --> HIFI["hifiasm reassemble"]
+    TB["Target Bases"] --> RAS
+    RAS --> HIFI["hifiasm assemble"]
     HIFI --> FCS2["fcs-gx clean (round 2)"]
 ```
 
