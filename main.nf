@@ -1,10 +1,11 @@
 nextflow.enable.dsl=2
 
 include { metamdbg_assemble } from './modules/metaMDBG.nf'
-include { fcs_gx_clean } from './modules/fcs_gx.nf'
+include { fcs_gx_clean as fcs_gx_initial_clean } from './modules/fcs_gx.nf'
 include { minimap2_align } from './modules/minimap2.nf'
 include { rasusa_subset } from './modules/rasusa.nf'
 include { hifiasm_reassemble } from './modules/hifiasm.nf'
+include { fcs_gx_clean as fcs_gx_final_clean } from './modules/fcs_gx.nf'
 
 workflow {
     main:
@@ -50,19 +51,24 @@ For additional details, consult README.md.
     def raw_reads_for_meta = channel.of(file(params.reads))
     def raw_reads_for_minimap = channel.of(file(params.reads))
 
-    def meta = metamdbg_assemble(raw_reads_for_meta)
+    metamdbg_assemble(raw_reads_for_meta)
+    def meta_assembly = metamdbg_assemble.out.assembly
 
-    def initial_fcs_input = meta.out.assembly.map { assembly -> tuple(assembly, file(params.gx_db), params.tax_id) }
-    def initial_clean = fcs_gx_clean(initial_fcs_input)
+    def initial_fcs_input = meta_assembly.map { assembly -> tuple(assembly, file(params.gx_db), params.tax_id) }
+    fcs_gx_initial_clean(initial_fcs_input)
+    def initial_clean_fasta = fcs_gx_initial_clean.out.clean_fasta
 
-    def minimap_input = initial_clean.out.clean_fasta.combine(raw_reads_for_minimap) { draft, reads -> tuple(draft, reads) }
-    def mapped = minimap2_align(minimap_input)
+    def minimap_input = initial_clean_fasta.combine(raw_reads_for_minimap) { draft, reads -> tuple(draft, reads) }
+    minimap2_align(minimap_input)
+    def mapped_reads = minimap2_align.out.mapped_reads
 
-    def rasusa_input = mapped.out.mapped_reads.map { mapped_reads -> tuple(mapped_reads, params.rasusa_bases) }
-    def subset = rasusa_subset(rasusa_input)
+    def rasusa_input = mapped_reads.map { mapped_reads_file -> tuple(mapped_reads_file, params.rasusa_bases) }
+    rasusa_subset(rasusa_input)
+    def subset_reads = rasusa_subset.out.subset_reads
 
-    def reassembly = hifiasm_reassemble(subset.out.subset_reads)
+    hifiasm_reassemble(subset_reads)
+    def reassembly_assembly = hifiasm_reassemble.out.assembly
 
-    def final_fcs_input = reassembly.out.assembly.map { assembly -> tuple(assembly, file(params.gx_db), params.tax_id) }
-    fcs_gx_clean(final_fcs_input)
+    def final_fcs_input = reassembly_assembly.map { assembly -> tuple(assembly, file(params.gx_db), params.tax_id) }
+    fcs_gx_final_clean(final_fcs_input)
 }
