@@ -1,8 +1,6 @@
-# patho-asm
+# TEA (Target Eukaryotic genome Assembly)
 
-## Introduction
-
-`patho-asm` is a modular Nextflow pipeline that assembles and polishes plant pathogen genomes starting from high-quality long-read data. The workflow chains together metaMDBG for the initial draft assembly, two rounds of NCBI FCS-GX decontamination, read mapping, optional rasusa-based downsampling, and a final HiFiasm re-assembly to deliver a curated genome suitable for downstream analysis or publication.
+A reference-independent framework for the assembly of high-quality eukaryotic genomes from complex and contaminated metagenomic samples.
 
 ## Workflow Overview
 
