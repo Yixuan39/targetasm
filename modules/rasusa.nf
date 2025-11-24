@@ -3,8 +3,9 @@ nextflow.enable.dsl=2
 process rasusa_subset {
     tag "rasusa subset: ${reads.simpleName}${bases ? ' (' + bases + ' bases)' : ''}"
     publishDir "${params.outdir}/rasusa", mode: 'copy'
-    cpus 2
-    conda "bioconda::rasusa"
+    cpus 1
+    memory "${params.threads * 8} GB"
+    conda "bioconda::rasusa=2.2.2"
 
     input:
     path reads

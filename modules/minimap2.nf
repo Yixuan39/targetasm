@@ -4,8 +4,8 @@ process minimap2_align {
     tag "minimap2 align: ${draft_assembly.simpleName}"
     publishDir "${params.outdir}/minimap2", mode: 'copy'
     cpus params.threads
-    memory '64 GB'
-    conda "bioconda::minimap2 bioconda::samtools conda-forge::pigz"
+    memory "${params.threads * 8} GB"
+    conda "bioconda::minimap2=2.30 bioconda::samtools=1.22.1 conda-forge::pigz=2.8"
 
     input:
     path draft_assembly

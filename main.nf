@@ -11,7 +11,7 @@ params.gx_db = params.gx_db ?: null
 params.tax_id = params.tax_id ?: null
 params.rasusa_bases = params.rasusa_bases ?: null
 params.outdir = params.outdir ?: "results"
-params.threads = params.threads ?: 32
+params.threads = params.threads ?: 24
 
 workflow {
     main:

@@ -5,7 +5,7 @@ process hifiasm_reassemble {
     publishDir "${params.outdir}/hifiasm", mode: 'copy'
     cpus params.threads
     memory "${params.threads * 8} GB"
-    conda "bioconda::hifiasm bioconda::gfatools conda-forge::pigz"
+    conda "bioconda::hifiasm=0.25.0 bioconda::gfatools=0.5 conda-forge::pigz=2.8"
 
     input:
     path reads
