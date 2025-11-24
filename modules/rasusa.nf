@@ -8,8 +8,7 @@ process rasusa_subset {
     conda "bioconda::rasusa=2.2.2"
 
     input:
-    path reads
-    val bases
+    tuple path(reads), val(bases)
 
     output:
     path "${reads.simpleName}.fastq.gz", emit: subset_reads

@@ -12,8 +12,8 @@ include { fcs_gx_clean as fcs_gx_final_clean } from './modules/fcs_gx.nf'
 
 workflow {
     main:
-                if (params.help) {
-                        log.info """
+        if (params.help) {
+            log.info """
 TEA (Target Eukaryotic genome Assembly)
 
 Usage:
@@ -51,27 +51,25 @@ For additional details, consult README.md.
             error "Parameter --tax_id is required for FCS-GX"
         }
 
-    def raw_reads_for_meta = channel.of(file(params.reads))
-    def raw_reads_for_minimap = channel.of(file(params.reads))
+        def reads_path = file(params.reads)
+        def gx_db_path = file(params.gx_db)
 
-    metamdbg_assemble(raw_reads_for_meta)
-    def meta_assembly = metamdbg_assemble.out.assembly
+        def reads_channel = channel.of(reads_path)
 
-    def initial_fcs_input = meta_assembly.map { assembly -> tuple(assembly, file(params.gx_db), params.tax_id) }
-    fcs_gx_initial_clean(initial_fcs_input)
-    def initial_clean_fasta = fcs_gx_initial_clean.out.clean_fasta
+        metamdbg_assemble(reads_channel)
 
-    def minimap_input = initial_clean_fasta.combine(raw_reads_for_minimap) { draft, reads -> tuple(draft, reads) }
-    minimap2_align(minimap_input)
-    def mapped_reads = minimap2_align.out.mapped_reads
+        def initial_fcs_input = metamdbg_assemble.out.assembly.map { assembly -> tuple(assembly, gx_db_path, params.tax_id) }
+        fcs_gx_initial_clean(initial_fcs_input)
 
-    def rasusa_input = mapped_reads.map { mapped_reads_file -> tuple(mapped_reads_file, params.rasusa_bases) }
-    rasusa_subset(rasusa_input)
-    def subset_reads = rasusa_subset.out.subset_reads
+        def minimap_input = fcs_gx_initial_clean.out.clean_fasta.map { draft -> tuple(draft, reads_path) }
+        minimap2_align(minimap_input)
 
-    hifiasm_reassemble(subset_reads)
-    def reassembly_assembly = hifiasm_reassemble.out.assembly
+        def rasusa_input = minimap2_align.out.mapped_reads.map { mapped_reads -> tuple(mapped_reads, params.rasusa_bases) }
+        rasusa_subset(rasusa_input)
 
-    def final_fcs_input = reassembly_assembly.map { assembly -> tuple(assembly, file(params.gx_db), params.tax_id) }
-    fcs_gx_final_clean(final_fcs_input)
+        hifiasm_reassemble(rasusa_subset.out.subset_reads)
+
+        def final_fcs_input = hifiasm_reassemble.out.assembly.map { assembly -> tuple(assembly, gx_db_path, params.tax_id) }
+        fcs_gx_final_clean(final_fcs_input)
+
 }

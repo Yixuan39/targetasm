@@ -8,8 +8,7 @@ process minimap2_align {
     conda "bioconda::minimap2=2.30 bioconda::samtools=1.22.1 conda-forge::pigz=2.8"
 
     input:
-    path draft_assembly
-    path raw_reads
+    tuple path(draft_assembly), path(raw_reads)
 
     output:
     path "${draft_assembly.simpleName}.mapped.fastq.gz", emit: mapped_reads
