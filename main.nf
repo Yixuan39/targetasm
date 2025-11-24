@@ -1,5 +1,8 @@
 nextflow.enable.dsl=2
 
+params.threads = params.threads ?: 24
+params.help = params.help ?: false
+
 include { metamdbg_assemble } from './modules/metaMDBG.nf'
 include { fcs_gx_clean as fcs_gx_initial_clean } from './modules/fcs_gx.nf'
 include { minimap2_align } from './modules/minimap2.nf'

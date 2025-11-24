@@ -8,9 +8,7 @@ process fcs_gx_clean {
     conda "bioconda::ncbi-fcs-gx=0.5.5"
 
     input:
-    path assembly
-    path gx_db
-    val tax_id
+    tuple path(assembly), path(gx_db), val(tax_id)
 
     output:
     path "fcs_gx.clean.fasta", emit: clean_fasta
