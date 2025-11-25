@@ -5,7 +5,6 @@ process metamdbg_assemble {
     publishDir "${params.outdir}/metaMDBG", mode: 'copy'
     cpus params.threads
     memory "${params.threads * 8} GB"
-    conda "bioconda::metamdbg=1.2"
 
     input:
     path reads

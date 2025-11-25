@@ -5,7 +5,6 @@ process minimap2_align {
     publishDir "${params.outdir}/minimap2", mode: 'copy'
     cpus params.threads
     memory "${params.threads * 8} GB"
-    conda "bioconda::minimap2=2.30 bioconda::samtools=1.22.1 conda-forge::pigz=2.8"
 
     input:
     tuple path(draft_assembly), path(raw_reads)

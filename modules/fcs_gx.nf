@@ -5,7 +5,6 @@ process fcs_gx_clean {
     publishDir "${params.outdir}/fcs_gx", mode: 'copy'
     cpus params.threads
     memory '512 GB'
-    conda "bioconda::ncbi-fcs-gx=0.5.5"
 
     input:
     tuple path(assembly), path(gx_db), val(tax_id)

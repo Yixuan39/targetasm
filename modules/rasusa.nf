@@ -5,7 +5,6 @@ process rasusa_subset {
     publishDir "${params.outdir}/rasusa", mode: 'copy'
     cpus 1
     memory "${params.threads * 8} GB"
-    conda "bioconda::rasusa=2.2.2"
 
     input:
     tuple path(reads), val(bases)
