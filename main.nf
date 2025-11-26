@@ -45,7 +45,7 @@ Usage:
         --rasusa_bases <bases> \\
         --threads <int> \\
         --hifiasm_option '<opts>' \\
-        --outdir <results_dir> \
+        --outdir <results_dir> \\
         --quality_library <path/to/compleasm_db> \
         --quality_lineage <lineage>
 
@@ -80,13 +80,15 @@ For additional details, consult README.md.
         def gx_db_path = file(params.gx_db)
 
         def reads_channel = channel.of(reads_path)
+        def initial_base = 'fcs_initial'
+        def final_base = 'fcs_final'
 
         metamdbg_assemble(reads_channel)
 
         def meta_for_fcs = metamdbg_assemble.out.assembly
         def meta_for_qc = metamdbg_assemble.out.assembly
 
-        def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_initial') }
+        def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, initial_base) }
         fcs_gx_initial_clean(initial_fcs_input)
 
         def initial_for_minimap = fcs_gx_initial_clean.out.clean_fasta
@@ -103,13 +105,13 @@ For additional details, consult README.md.
         def hifiasm_for_fcs = hifiasm_reassemble.out.assembly
         def hifiasm_for_qc = hifiasm_reassemble.out.assembly
 
-        def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final') }
+        def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, final_base) }
         fcs_gx_final_clean(final_fcs_input)
 
-        def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
+        def final_for_delivery = fcs_gx_final_clean.out.gz_fasta
         def final_for_qc = fcs_gx_final_clean.out.clean_fasta
 
-        def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
+        def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, 'fcs_final.fasta.gz') }
         deliver_final_clean(delivery_input)
 
         if (params.quality_library) {

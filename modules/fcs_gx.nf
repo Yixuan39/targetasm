@@ -7,15 +7,17 @@ process fcs_gx_clean {
     memory '512 GB'
 
     input:
-    tuple path(assembly), path(gx_db), val(tax_id), val(output_name)
+    tuple path(assembly), path(gx_db), val(tax_id), val(output_base)
 
     output:
-    path output_name, emit: clean_fasta
-    path "${output_name}.fcs_gx_report.txt", emit: report
+    path "${output_base}.clean.fasta", emit: clean_fasta
+    path "${output_base}.fasta.gz", emit: gz_fasta
+    path "${output_base}.fcs_gx_report.txt", emit: report
 
     script:
-    def output_prefix = output_name.replaceFirst(/(\.f(ast|a|na)(\.gz)?)$/, '') ?: output_name
-    def report_name = "${output_name}.fcs_gx_report.txt"
+    def output_prefix = output_base
+    def report_name = "${output_base}.fcs_gx_report.txt"
+    def clean_name = "${output_base}.clean.fasta"
     """
     set -euo pipefail
     export GX_NUM_CORES=${task.cpus}
@@ -32,7 +34,8 @@ process fcs_gx_clean {
     gx clean-genome \
         --input ${assembly} \
         --action-report ${report_name} \
-        --output ${output_name}.fasta
-    pigz -p ${task.cpus} ${output_name}.fasta
+        --output ${clean_name}
+
+    pigz -p ${task.cpus} -c ${clean_name} > ${output_base}.fasta.gz
     """
 }
