@@ -1,5 +1,7 @@
 nextflow.enable.dsl=2
 
+import nextflow.util.Tuple
+
 process quality_check {
     tag "quality check"
     publishDir "${params.outdir}/quality", mode: 'copy'
