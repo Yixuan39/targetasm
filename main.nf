@@ -116,12 +116,10 @@ For additional details, consult README.md.
             if (!params.quality_lineage) {
                 error "Parameter --quality_lineage is required when --quality_library is provided"
             }
-            def qc_manifest = channel.merge(
-                meta_for_qc.map { asm -> tuple('metamdbg', asm) },
-                initial_for_qc.map { asm -> tuple('fcs_initial', asm) },
-                hifiasm_for_qc.map { asm -> tuple('hifiasm', asm) },
-                final_for_qc.map { asm -> tuple('fcs_final', asm) }
-            )
+            def qc_manifest = meta_for_qc.map { asm -> tuple('metamdbg', asm) }
+                .mix(initial_for_qc.map { asm -> tuple('fcs_initial', asm) })
+                .mix(hifiasm_for_qc.map { asm -> tuple('hifiasm', asm) })
+                .mix(final_for_qc.map { asm -> tuple('fcs_final', asm) })
             .filter { _label, asm ->
                 def lower = asm.toString().toLowerCase()
                 !(lower.endsWith('.fastq') || lower.endsWith('.fastq.gz') || lower.endsWith('.fq') || lower.endsWith('.fq.gz'))
