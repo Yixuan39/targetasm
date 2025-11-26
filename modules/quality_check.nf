@@ -1,7 +1,5 @@
 nextflow.enable.dsl=2
 
-import nextflow.util.Tuple
-
 process quality_check {
     tag "quality check"
     publishDir "${params.outdir}/quality", mode: 'copy'
@@ -20,7 +18,7 @@ process quality_check {
     }
 
     def normalized_entries = manifest_entries.collect { entry ->
-        if (!(entry instanceof List || entry instanceof nextflow.util.Tuple) || entry.size() < 2) {
+        if (!(entry instanceof List) || entry.size() < 2) {
             throw new IllegalArgumentException("Each manifest entry must be a [label, path] pair; received: ${entry}")
         }
         [entry[0].toString(), entry[1].toString()]
