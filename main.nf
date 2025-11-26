@@ -108,7 +108,7 @@ For additional details, consult README.md.
         def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, final_base) }
         fcs_gx_final_clean(final_fcs_input)
 
-        def final_for_delivery = fcs_gx_final_clean.out.gz_fasta
+        def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
         def final_for_qc = fcs_gx_final_clean.out.clean_fasta
 
         def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, 'fcs_final.fasta.gz') }
