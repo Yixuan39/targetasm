@@ -111,7 +111,7 @@ For additional details, consult README.md.
         def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
         def final_for_qc = fcs_gx_final_clean.out.clean_fasta
 
-        def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, 'fcs_final.fasta.gz') }
+        def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
         deliver_final_clean(delivery_input)
 
         if (params.quality_library) {
