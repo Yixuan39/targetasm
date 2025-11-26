@@ -104,10 +104,10 @@ For additional details, consult README.md.
         def hifiasm_for_qc = hifiasm_reassemble.out.assembly
 
         def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final.clean.fasta') }
-        def final_clean = fcs_gx_final_clean(final_fcs_input)
+        fcs_gx_final_clean(final_fcs_input)
 
-        def final_for_delivery = final_clean.out.clean_fasta
-        def final_for_qc = final_clean.out.clean_fasta
+        def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
+        def final_for_qc = fcs_gx_final_clean.out.clean_fasta
 
         def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
         deliver_final_clean(delivery_input)
