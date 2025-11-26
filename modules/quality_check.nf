@@ -13,12 +13,13 @@ process quality_check {
     path "quality_metrics.tsv", emit: metrics
 
     script:
-    def copyCommands = manifest_entries.collectWithIndex { entry, idx ->
+    def copyCommands = []
+    manifest_entries.eachWithIndex { entry, idx ->
         def label = entry[0].replaceAll(/[^A-Za-z0-9_.-]/, '_')
         def source = entry[1]
         def sourceName = new File(source).name
         def dest = "${String.format('%02d', idx)}_${label}_${sourceName}"
-        ["cp \"${source}\" \"${dest}\"", "${entry[0]}\t${dest}"]
+        copyCommands << ["cp \"${source}\" \"${dest}\"", "${entry[0]}\t${dest}"]
     }
     def copyScript = copyCommands.collect { cmd -> cmd[0] }.join('\n')
     def manifestContent = copyCommands.collect { cmd -> cmd[1] }.join('\n') + '\n'
