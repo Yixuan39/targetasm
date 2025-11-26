@@ -13,8 +13,19 @@ process quality_check {
     path "quality_metrics.tsv", emit: metrics
 
     script:
+    if (!(manifest_entries instanceof List) || manifest_entries.isEmpty()) {
+        throw new IllegalArgumentException("quality_check requires a non-empty list of manifest entries")
+    }
+
+    def normalized_entries = manifest_entries.collect { entry ->
+        if (!(entry instanceof List || entry instanceof nextflow.util.Tuple) || entry.size() < 2) {
+            throw new IllegalArgumentException("Each manifest entry must be a [label, path] pair; received: ${entry}")
+        }
+        [entry[0].toString(), entry[1].toString()]
+    }
+
     def copyCommands = []
-    manifest_entries.eachWithIndex { entry, idx ->
+    normalized_entries.eachWithIndex { entry, idx ->
         def label = entry[0].replaceAll(/[^A-Za-z0-9_.-]/, '_')
         def source = entry[1]
         def sourceName = new File(source).name
