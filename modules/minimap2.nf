@@ -10,7 +10,7 @@ process minimap2_align {
     tuple path(draft_assembly), path(raw_reads)
 
     output:
-    path "${draft_assembly.simpleName}.mapped.fastq.gz", emit: mapped_reads
+    path "mapped.fastq.gz", emit: mapped_reads
 
     script:
     """
@@ -19,6 +19,6 @@ process minimap2_align {
     minimap2 -ax map-hifi --secondary=no -t ${task.cpus} ${draft_assembly} ${raw_reads} \
     | samtools view -b -F 0x4 \
     | samtools fastq -n - \
-    | pigz -p ${task.cpus} > ${draft_assembly.simpleName}.mapped.fastq.gz
+    | pigz -p ${task.cpus} > mapped.fastq.gz
     """
 }

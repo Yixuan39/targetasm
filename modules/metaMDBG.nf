@@ -10,7 +10,7 @@ process metamdbg_assemble {
     path reads
 
     output:
-    path "${reads.simpleName}.fasta.gz", emit: assembly
+    path "MAGs.fasta.gz", emit: assembly
 
     script:
     """
@@ -19,6 +19,6 @@ process metamdbg_assemble {
         --in-hifi ${reads} \
         --threads ${task.cpus}
 
-    mv contigs.fasta.gz ${reads.simpleName}.fasta.gz
+    mv contigs.fasta.gz MAGs.fasta.gz
     """
 }

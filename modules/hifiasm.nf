@@ -10,7 +10,7 @@ process hifiasm_reassemble {
     path reads
 
     output:
-    path "${reads.simpleName}.fasta.gz", emit: assembly
+    path "assembly.fasta.gz", emit: assembly
 
     script:
     """
@@ -24,6 +24,6 @@ process hifiasm_reassemble {
         ${reads}
 
     gfatools gfa2fa asm.p_ctg.gfa \
-        | pigz -p ${task.cpus} > ${reads.simpleName}.fasta.gz
+        | pigz -p ${task.cpus} > assembly.fasta.gz
     """
 }

@@ -2,9 +2,7 @@ nextflow.enable.dsl=2
 
 params.threads = params.threads ?: 24
 params.help = params.help ?: false
-params.fcs_initial_output = params.fcs_initial_output ?: 'fcs_initial.clean.fasta'
-params.fcs_final_output = params.fcs_final_output ?: 'fcs_final.clean.fasta'
-params.quality_lineage = params.quality_lineage ?: 'stramenopiles'
+params.quality_lineage = params.quality_lineage ?: ''
 
 include { metamdbg_assemble } from './modules/metaMDBG.nf'
 include { fcs_gx_clean as fcs_gx_initial_clean } from './modules/fcs_gx.nf'
@@ -47,8 +45,6 @@ Usage:
         --rasusa_bases <bases> \\
         --threads <int> \\
         --hifiasm_option '<opts>' \\
-        --fcs_initial_output <file> \
-        --fcs_final_output <file> \
         --outdir <results_dir> \
         --quality_library <path/to/compleasm_db> \
         --quality_lineage <lineage>
@@ -62,11 +58,9 @@ Parameters:
     --threads          Maximum CPU cores assigned to threaded processes
                                          (default: ${params.threads}).
     --hifiasm_option   Extra options passed to hifiasm (default: '-l 1').
-    --fcs_initial_output  Filename for the first FCS-GX cleaned assembly (default: ${params.fcs_initial_output}).
-    --fcs_final_output    Filename for the final FCS-GX cleaned assembly (default: ${params.fcs_final_output}).
     --outdir           Directory for published outputs (default: ${params.outdir}).
     --quality_library  Path to the Compleasm database; required to enable quality checks.
-    --quality_lineage  Compleasm lineage dataset name (default: ${params.quality_lineage}).
+    --quality_lineage  Compleasm lineage dataset name (required when --quality_library is supplied).
 
 For additional details, consult README.md.
 """
@@ -91,7 +85,7 @@ For additional details, consult README.md.
 
         def meta_assemblies = metamdbg_assemble.out.assembly.share()
 
-        def initial_fcs_input = meta_assemblies.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, params.fcs_initial_output) }
+        def initial_fcs_input = meta_assemblies.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_initial.clean.fasta') }
         fcs_gx_initial_clean(initial_fcs_input)
 
         def initial_clean_fasta = fcs_gx_initial_clean.out.clean_fasta.share()
@@ -106,7 +100,7 @@ For additional details, consult README.md.
 
         def reassembly_assemblies = hifiasm_reassemble.out.assembly.share()
 
-        def final_fcs_input = reassembly_assemblies.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, params.fcs_final_output) }
+        def final_fcs_input = reassembly_assemblies.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final.clean.fasta') }
         def final_clean = fcs_gx_final_clean(final_fcs_input)
 
         def final_clean_fasta = final_clean.out.clean_fasta.share()
@@ -115,6 +109,9 @@ For additional details, consult README.md.
         deliver_final_clean(delivery_input)
 
         if (params.quality_library) {
+            if (!params.quality_lineage) {
+                error "Parameter --quality_lineage is required when --quality_library is provided"
+            }
             def qc_manifest = channel.merge(
                 meta_assemblies.map { asm -> tuple('metamdbg', asm) },
                 initial_clean_fasta.map { asm -> tuple('fcs_initial', asm) },
