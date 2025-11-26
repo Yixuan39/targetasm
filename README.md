@@ -10,6 +10,8 @@ A reference-independent framework for the assembly of high-quality eukaryotic ge
 4. **rasusa_subset** – Optionally downsamples mapped reads to the requested number of bases (passes the full set through if not specified).
 5. **hifiasm_reassemble** – Re-assembles the filtered reads to improve structural accuracy.
 6. **fcs_gx_clean (round 2)** – Performs a final contamination screen on the polished assembly to generate the release-ready genome.
+7. **deliver_final_clean** – Copies the final FCS-cleaned assembly to the requested output directory with a stable filename.
+8. **quality_check** *(optional)* – When `--quality_library` and `--quality_lineage` are provided, Compleasm + QUAST run on the metaMDBG, initial FCS, hifiasm, and final FCS assemblies, producing a combined QC table.
 
 ## Workflow DAG
 
@@ -23,6 +25,13 @@ graph TD
     TB["Target Bases"] --> RAS
     RAS --> HIFI["hifiasm assemble"]
     HIFI --> FCS2["fcs-gx clean (round 2)"]
+    FCS2 --> DELIVER["deliver final clean"]
+    %% Optional QC fan-in
+    MDBG -.-> QC["quality check (Compleasm + QUAST)"]
+    FCS1 -.-> QC
+    HIFI -.-> QC
+    FCS2 -.-> QC
+    QC -. optional .-> REPORT["quality_metrics.tsv"]
 ```
 
 ## Quick Start
