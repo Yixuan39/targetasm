@@ -83,22 +83,18 @@ For additional details, consult README.md.
 
         metamdbg_assemble(reads_channel)
 
+        def meta_assemblies = metamdbg_assemble.out.assembly
         def meta_for_fcs
         def meta_for_qc
-        metamdbg_assemble.out.assembly.into { ch1, ch2 ->
-            meta_for_fcs = ch1
-            meta_for_qc = ch2
-        }
+        meta_assemblies.into { meta_for_fcs; meta_for_qc }
 
         def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_initial.clean.fasta') }
         fcs_gx_initial_clean(initial_fcs_input)
 
+        def initial_clean_fasta = fcs_gx_initial_clean.out.clean_fasta
         def initial_for_minimap
         def initial_for_qc
-        fcs_gx_initial_clean.out.clean_fasta.into { ch1, ch2 ->
-            initial_for_minimap = ch1
-            initial_for_qc = ch2
-        }
+        initial_clean_fasta.into { initial_for_minimap; initial_for_qc }
 
         def minimap_input = initial_for_minimap.map { draft -> tuple(draft, reads_path) }
         minimap2_align(minimap_input)
@@ -108,22 +104,18 @@ For additional details, consult README.md.
 
         hifiasm_reassemble(rasusa_subset.out.subset_reads)
 
+        def reassembly_assemblies = hifiasm_reassemble.out.assembly
         def hifiasm_for_fcs
         def hifiasm_for_qc
-        hifiasm_reassemble.out.assembly.into { ch1, ch2 ->
-            hifiasm_for_fcs = ch1
-            hifiasm_for_qc = ch2
-        }
+        reassembly_assemblies.into { hifiasm_for_fcs; hifiasm_for_qc }
 
         def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final.clean.fasta') }
         def final_clean = fcs_gx_final_clean(final_fcs_input)
 
+        def final_clean_fasta = final_clean.out.clean_fasta
         def final_for_delivery
         def final_for_qc
-        final_clean.out.clean_fasta.into { ch1, ch2 ->
-            final_for_delivery = ch1
-            final_for_qc = ch2
-        }
+        final_clean_fasta.into { final_for_delivery; final_for_qc }
 
         def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
         deliver_final_clean(delivery_input)
