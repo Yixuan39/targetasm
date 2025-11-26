@@ -9,7 +9,7 @@ process fcs_gx_clean {
     tuple path(assembly), path(gx_db), val(tax_id), val(output_base)
 
     output:
-    path "${output_base}.fasta.gz", emit: gz_fasta
+    path "${output_base}.fasta.gz", emit: clean_fasta
     path "${output_base}.fcs_gx_report.txt", emit: report
 
     script:
