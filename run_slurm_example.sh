@@ -8,10 +8,10 @@ nextflow run main.nf \
     -profile slurm \
     -resume \
     --reads "${HOME}/project_data/downy/GSL_Data/fastq/filtered/Quesada_SQIIe_SC1982.fastq.gz" \
-    --outdir "${HOME}/test" \
+    --outdir "${HOME}/Quesada_SQIIe_SC1982" \
     --gx_db "${HOME}/project_data/downy/fcs-db" \
     --tax_id 4762 \
-    --rasusa_bases 2500000000 \
+    --rasusa_bases 5400000000 \
     --threads 24 \
-    --quality_library "${HOME}/project_data/downy/Compleasm_DB" \
+    --quality_library ~/project_data/downy/BUSCO_DB/ \
     --quality_lineage stramenopiles
