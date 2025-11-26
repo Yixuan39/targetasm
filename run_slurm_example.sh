@@ -6,6 +6,7 @@ set -euo pipefail
 
 nextflow run main.nf \
     -profile slurm \
+    -resume \
     --reads "${HOME}/project_data/downy/GSL_Data/fastq/filtered/Quesada_SQIIe_SC1982.fastq.gz" \
     --outdir "${HOME}/Quesada_SQIIe_SC1982" \
     --gx_db "${HOME}/project_data/downy/fcs-db" \
