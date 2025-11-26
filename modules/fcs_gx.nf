@@ -32,6 +32,7 @@ process fcs_gx_clean {
     gx clean-genome \
         --input ${assembly} \
         --action-report ${report_name} \
-        --output ${output_name}
+        --output ${output_name}.fasta
+    pigz -p ${task.cpus} ${output_name}.fasta
     """
 }

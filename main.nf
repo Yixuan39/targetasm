@@ -86,7 +86,7 @@ For additional details, consult README.md.
         def meta_for_fcs = metamdbg_assemble.out.assembly
         def meta_for_qc = metamdbg_assemble.out.assembly
 
-        def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_initial.clean.fasta') }
+        def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_initial') }
         fcs_gx_initial_clean(initial_fcs_input)
 
         def initial_for_minimap = fcs_gx_initial_clean.out.clean_fasta
@@ -103,7 +103,7 @@ For additional details, consult README.md.
         def hifiasm_for_fcs = hifiasm_reassemble.out.assembly
         def hifiasm_for_qc = hifiasm_reassemble.out.assembly
 
-        def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final.clean.fasta') }
+        def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final') }
         fcs_gx_final_clean(final_fcs_input)
 
         def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
