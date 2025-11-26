@@ -9,16 +9,14 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import List, Sequence, Tuple
+import pandas as pd
 
-import pandas as pd  # type: ignore[import]
 
-
-ASSEMBLY_MANIFEST = Path(os.environ.get("QUALITY_MANIFEST", "assemblies.tsv"))
-OUTPUT_TABLE = Path(os.environ.get("QUALITY_OUTPUT", "quality_metrics.tsv"))
-DEFAULT_THREADS = int(os.environ.get("QUALITY_THREADS", os.cpu_count() or 1))
-DEFAULT_LIBRARY = Path(os.environ.get("QUALITY_LIBRARY", os.environ.get("BUSCO_DB", ""))).expanduser()
-DEFAULT_LINEAGE = os.environ.get("QUALITY_LINEAGE", "stramenopiles")
-RAW_READ_SUFFIXES: Tuple[str, ...] = (".fastq", ".fastq.gz", ".fq", ".fq.gz")
+ASSEMBLY_MANIFEST = Path(os.environ["QUALITY_MANIFEST"])
+OUTPUT_TABLE = Path(os.environ["QUALITY_OUTPUT"])
+DEFAULT_THREADS = int(os.environ["QUALITY_THREADS"])
+DEFAULT_LIBRARY = Path(os.environ["QUALITY_LIBRARY"]).expanduser()
+DEFAULT_LINEAGE = os.environ["QUALITY_LINEAGE"]
 
 
 def run_command(cmd: Sequence[str]) -> None:
@@ -102,11 +100,6 @@ def load_manifest(path: Path) -> List[Tuple[str, Path]]:
     return entries
 
 
-def is_raw_hifi_reads(path: Path) -> bool:
-    name = path.name.lower()
-    return any(name.endswith(suffix) for suffix in RAW_READ_SUFFIXES)
-
-
 def main() -> None:
     assemblies = load_manifest(ASSEMBLY_MANIFEST)
     work_root = Path.cwd() / "quality_runs"
@@ -116,9 +109,6 @@ def main() -> None:
     for label, assembly in assemblies:
         if not assembly.exists():
             raise FileNotFoundError(f"Assembly not found: {assembly}")
-        if is_raw_hifi_reads(assembly):
-            sys.stderr.write(f"Skipping raw HiFi read file, not evaluating quality: {assembly}\n")
-            continue
         rows.append(
             evaluate(
                 label=label,
@@ -131,9 +121,7 @@ def main() -> None:
         )
 
     if not rows:
-        raise ValueError(
-            "No assembly FASTA entries remained after filtering out raw HiFi read files."
-        )
+        raise ValueError("No assembly entries were provided for quality evaluation.")
 
     result = pd.concat(rows, ignore_index=True)
     OUTPUT_TABLE.parent.mkdir(parents=True, exist_ok=True)
