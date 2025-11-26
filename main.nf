@@ -3,6 +3,7 @@ nextflow.enable.dsl=2
 params.threads = params.threads ?: 24
 params.help = params.help ?: false
 params.quality_lineage = params.quality_lineage ?: ''
+params.hifiasm_option = params.hifiasm_option ?: '-l 1'
 
 include { metamdbg_assemble } from './modules/metaMDBG.nf'
 include { fcs_gx_clean as fcs_gx_initial_clean } from './modules/fcs_gx.nf'
@@ -128,7 +129,7 @@ For additional details, consult README.md.
             }
 
             def manifest_entries = qc_manifest
-                .map { label, asm -> [label, asm.toString()] }
+                .map { label, asm -> tuple(label.toString(), asm.toString()) }
                 .collect()
                 .filter { entries -> entries && entries.size() > 0 }
                 .map { entries -> tuple(entries, params.quality_library, params.quality_lineage) }
