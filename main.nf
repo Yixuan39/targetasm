@@ -39,7 +39,7 @@ Usage:
         --reads <reads.fastq.gz> \\
         --gx_db <path/to/gx-db-prefix> \\
         --tax_id <ncbi_tax_id> \\
-        --rasusa_bases <bases> \\
+        --target_bases <bases> \\
         --threads <int> \\
         --hifiasm_option '<opts>' \\
         --outdir <results_dir> \\
@@ -50,8 +50,8 @@ Parameters:
     --reads            Input PacBio HiFi reads in FASTQ.GZ format (required).
     --gx_db            Path prefix to the NCBI FCS-GX database bundle (required).
     --tax_id           NCBI taxonomy identifier used by FCS-GX (required).
-    --rasusa_bases     Optional target number of bases for rasusa downsampling (genome size * coverage);
-                                         omit to retain all mapped reads.
+    --target_bases     Optional target number of bases for subsampling (genome size * coverage);
+                                         omit to use all mapped reads.
     --rasusa_seed      Random seed for rasusa subsampling (default: 42).
     --threads          Maximum CPU cores assigned to threaded processes
                                          (default: ${params.threads}).
@@ -95,9 +95,9 @@ For additional details, consult README.md.
         def minimap_input = initial_for_minimap.map { draft -> tuple(draft, reads_path) }
         minimap2_align(minimap_input)
 
-        // Skip rasusa if rasusa_bases is not set
-        if (params.rasusa_bases) {
-            def rasusa_input = minimap2_align.out.mapped_reads.map { mapped_reads -> tuple(mapped_reads, params.rasusa_bases) }
+        // Skip rasusa if target_bases is not set
+        if (params.target_bases) {
+            def rasusa_input = minimap2_align.out.mapped_reads.map { mapped_reads -> tuple(mapped_reads, params.target_bases) }
             rasusa_subset(rasusa_input)
             hifiasm_reassemble(rasusa_subset.out.subset_reads)
         } else {
