@@ -2,7 +2,6 @@ nextflow.enable.dsl=2
 
 process quality_check {
     tag "quality check: ${label}"
-    publishDir "${params.outdir}/quality", mode: 'copy'
     cpus params.threads
     memory "${params.threads * 8} GB"
 
@@ -11,7 +10,6 @@ process quality_check {
 
     output:
     path "${label}_metrics.tsv", emit: metrics
-    path "${assembly.simpleName}_final.tsv", optional: true, emit: final_metrics
 
     script:
     """
@@ -29,14 +27,56 @@ process quality_check {
         --threads ${task.cpus} \
         --eukaryote ${assembly}
 
-    # Parse compleasm summary and quast report into TSV
-    echo -e "Step\\tAssembly\\t\$(tail -n +2 compleasm_out/summary.txt | cut -d: -f1 | tr '\\n' '\\t' | sed 's/\\t\$//')\\t\$(head -1 quast_out/report.tsv)" > ${label}_metrics.tsv
-    echo -e "${step_name}\\t${assembly}\\t\$(tail -n +2 compleasm_out/summary.txt | cut -d: -f2 | tr '\\n' '\\t' | sed 's/\\t\$//')\\t\$(tail -1 quast_out/report.tsv)" >> ${label}_metrics.tsv
+    # Extract compleasm percentages (e.g., "95.2%" from "S:95.2%, 123")
+    compleasm_headers=\$(awk -F: 'NR>1 {printf "%s%s", sep, \$1; sep="\t"} END {print ""}' compleasm_out/summary.txt)
+    compleasm_values=\$(awk -F: 'NR>1 {gsub(/^[ \t]+/, "", \$2); split(\$2, a, ","); printf "%s%s", sep, a[1]; sep="\t"} END {print ""}' compleasm_out/summary.txt)
 
-    # Generate final assembly metrics file if this is the final step
-    if [ "${is_final}" = "true" ]; then
-        echo -e "Step\\tAssembly\\t\$(tail -n +2 compleasm_out/summary.txt | cut -d: -f1 | tr '\\n' '\\t' | sed 's/\\t\$//')\\t\$(head -1 quast_out/report.tsv)" > ${assembly.simpleName}_final.tsv
-        echo -e "${assembly.simpleName}\\t${assembly}\\t\$(tail -n +2 compleasm_out/summary.txt | cut -d: -f2 | tr '\\n' '\\t' | sed 's/\\t\$//')\\t\$(tail -1 quast_out/report.tsv)" >> ${assembly.simpleName}_final.tsv
-    fi
+    # Extract full quast report (transpose: metric names as header, values as row)
+    quast_headers=\$(awk -F'\t' '{printf "%s%s", sep, \$1; sep="\t"} END {print ""}' quast_out/report.tsv)
+    quast_values=\$(awk -F'\t' '{printf "%s%s", sep, \$2; sep="\t"} END {print ""}' quast_out/report.tsv)
+
+    # Write metrics TSV (Step column only, no Assembly column)
+    printf 'Step\t%s\t%s\n' "\${compleasm_headers}" "\${quast_headers}" > ${label}_metrics.tsv
+    printf '%s\t%s\t%s\n' '${step_name}' "\${compleasm_values}" "\${quast_values}" >> ${label}_metrics.tsv
+    """
+}
+
+process merge_quality_reports {
+    tag "merge quality reports"
+    publishDir "${params.outdir}/quality", mode: 'copy'
+    cpus 1
+    memory '1 GB'
+
+    input:
+    path metrics_files
+    val final_assembly_name
+
+    output:
+    path "quality_trace.tsv", emit: trace
+    path "quality_final.tsv", emit: final_report
+
+    script:
+    """
+    set -euo pipefail
+
+    # Define processing order
+    order=(metamdbg_metrics.tsv fcs_initial_metrics.tsv hifiasm_metrics.tsv fcs_final_metrics.tsv)
+
+    # Write header from first available file
+    for f in "\${order[@]}"; do
+        if [[ -f "\$f" ]]; then
+            head -1 "\$f" > quality_trace.tsv
+            break
+        fi
+    done
+
+    # Append data rows in order
+    for f in "\${order[@]}"; do
+        [[ -f "\$f" ]] && tail -n +2 "\$f" >> quality_trace.tsv
+    done
+
+    # Create quality_final.tsv with 'file' column
+    head -1 fcs_final_metrics.tsv | sed 's/^Step/file/' > quality_final.tsv
+    tail -n +2 fcs_final_metrics.tsv | sed 's/^fcs_gx round 2/${final_assembly_name}/' >> quality_final.tsv
     """
 }

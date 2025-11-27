@@ -18,7 +18,7 @@ process hifiasm_reassemble {
 
     hifiasm \
         -t ${task.cpus} \
-        ${params.hifiasm_option ?: '-l 1'} \
+        ${params.hifiasm_option} \
         --primary \
         -o asm \
         ${reads}

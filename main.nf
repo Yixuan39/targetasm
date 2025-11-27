@@ -1,10 +1,5 @@
 nextflow.enable.dsl=2
 
-params.threads = params.threads ?: 24
-params.help = params.help ?: false
-params.quality_lineage = params.quality_lineage ?: ''
-params.hifiasm_option = params.hifiasm_option ?: '-l 1'
-
 include { metamdbg_assemble } from './modules/metaMDBG.nf'
 include { fcs_gx_clean as fcs_gx_initial_clean } from './modules/fcs_gx.nf'
 include { minimap2_align } from './modules/minimap2.nf'
@@ -12,6 +7,7 @@ include { rasusa_subset } from './modules/rasusa.nf'
 include { hifiasm_reassemble } from './modules/hifiasm.nf'
 include { fcs_gx_clean as fcs_gx_final_clean } from './modules/fcs_gx.nf'
 include { quality_check } from './modules/quality_check.nf'
+include { merge_quality_reports } from './modules/quality_check.nf'
 
 process deliver_final_clean {
     tag "deliver final clean"
@@ -121,6 +117,10 @@ For additional details, consult README.md.
 
             def qc_inputs = qc_metamdbg.mix(qc_fcs_initial).mix(qc_hifiasm).mix(qc_fcs_final)
             quality_check(qc_inputs)
+
+            def all_metrics = quality_check.out.metrics.collect()
+            def final_name = reads_path.simpleName
+            merge_quality_reports(all_metrics, final_name)
         } else {
             log.warn "Skipping quality check because --quality_library was not provided."
         }
