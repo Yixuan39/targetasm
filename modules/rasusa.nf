@@ -2,7 +2,7 @@ nextflow.enable.dsl=2
 
 process rasusa_subset {
     tag "rasusa subset: ${reads.simpleName} (${bases} bases)"
-    publishDir "${params.outdir}/rasusa", mode: 'copy'
+    publishDir "${params.outdir}/rasusa", mode: 'copy', enabled: params.keep_intermediates
     cpus 1
     memory "${params.threads * 8} GB"
 

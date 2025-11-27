@@ -2,7 +2,7 @@ nextflow.enable.dsl=2
 
 process fcs_gx_clean {
     tag "fcs-gx clean: ${assembly.simpleName}"
-    publishDir "${params.outdir}/fcs_gx", mode: 'copy'
+    publishDir "${params.outdir}/fcs_gx", mode: 'copy', enabled: params.keep_intermediates
     cpus params.threads
 
     input:

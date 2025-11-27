@@ -56,6 +56,9 @@ Parameters:
     --threads          Maximum CPU cores assigned to threaded processes
                                          (default: ${params.threads}).
     --hifiasm_option   Extra options passed to hifiasm (default: '-l 1').
+    --keep_intermediates
+                       Keep intermediate files (draft assemblies, mapped reads, etc.);
+                                         use this flag to retain them (default: off).
     --outdir           Directory for published outputs (default: ${params.outdir}).
     --quality_library  Path to the Compleasm database; required to enable quality checks.
     --quality_lineage  Compleasm lineage dataset name (required when --quality_library is supplied).

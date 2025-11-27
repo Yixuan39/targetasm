@@ -2,7 +2,7 @@ nextflow.enable.dsl=2
 
 process minimap2_align {
     tag "minimap2 align: ${draft_assembly.simpleName}"
-    publishDir "${params.outdir}/minimap2", mode: 'copy'
+    publishDir "${params.outdir}/minimap2", mode: 'copy', enabled: params.keep_intermediates
     cpus params.threads
     memory "${params.threads * 8} GB"
 
