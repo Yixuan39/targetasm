@@ -13,7 +13,6 @@ process fcs_gx_clean {
     path "${output_base}.fcs_gx_report.txt", emit: report
 
     script:
-
     """
     set -euo pipefail
     export GX_NUM_CORES=${task.cpus}
@@ -26,12 +25,12 @@ process fcs_gx_clean {
         --out-dir . \
         --out-basename ${output_base}
 
-    # 2. Clean genome using the generated report
+    # 2. Clean genome (gx clean-genome requires uncompressed input)
+    gzip -dkc ${assembly} > input.fasta
     gx clean-genome \
-        --input ${assembly} \
+        --input input.fasta \
         --action-report "${output_base}.fcs_gx_report.txt" \
-        --output ${output_base}.fasta
-
-    pigz -p ${task.cpus} -c ${output_base}.fasta > ${output_base}.fasta.gz
+        --output output.fasta
+    pigz -p ${task.cpus} -c output.fasta > ${output_base}.fasta.gz
     """
 }

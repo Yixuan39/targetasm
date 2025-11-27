@@ -9,7 +9,7 @@ process quality_check {
     tuple val(label), val(step_name), path(assembly), val(library_path), val(lineage), val(is_final)
 
     output:
-    path "${label}_metrics.tsv", emit: metrics
+    path "${label}_metrics.csv", emit: metrics
 
     script:
     """
@@ -27,17 +27,17 @@ process quality_check {
         --threads ${task.cpus} \
         --eukaryote ${assembly}
 
-    # Extract compleasm percentages (e.g., "95.2%" from "S:95.2%, 123")
-    compleasm_headers=\$(awk -F: 'NR>1 {printf "%s%s", sep, \$1; sep="\t"} END {print ""}' compleasm_out/summary.txt)
-    compleasm_values=\$(awk -F: 'NR>1 {gsub(/^[ \t]+/, "", \$2); split(\$2, a, ","); printf "%s%s", sep, a[1]; sep="\t"} END {print ""}' compleasm_out/summary.txt)
+    # Extract compleasm headers and values (percentage only, e.g., "95.2%" from "S:95.2%, 123")
+    compleasm_headers=\$(awk -F: 'NR>1 {printf "%s%s", sep, \$1; sep=","}' compleasm_out/summary.txt)
+    compleasm_values=\$(awk -F: 'NR>1 {gsub(/^[ \\t]+/, "", \$2); split(\$2, a, ","); printf "%s%s", sep, a[1]; sep=","}' compleasm_out/summary.txt)
 
-    # Extract full quast report (transpose: metric names as header, values as row)
-    quast_headers=\$(awk -F'\t' '{printf "%s%s", sep, \$1; sep="\t"} END {print ""}' quast_out/report.tsv)
-    quast_values=\$(awk -F'\t' '{printf "%s%s", sep, \$2; sep="\t"} END {print ""}' quast_out/report.tsv)
+    # Extract quast headers and values
+    quast_headers=\$(awk -F'\\t' '{printf "%s%s", sep, \$1; sep=","}' quast_out/report.tsv)
+    quast_values=\$(awk -F'\\t' '{printf "%s%s", sep, \$2; sep=","}' quast_out/report.tsv)
 
-    # Write metrics TSV (Step column only, no Assembly column)
-    printf 'Step\t%s\t%s\n' "\${compleasm_headers}" "\${quast_headers}" > ${label}_metrics.tsv
-    printf '%s\t%s\t%s\n' '${step_name}' "\${compleasm_values}" "\${quast_values}" >> ${label}_metrics.tsv
+    # Write CSV with Step column
+    echo "Step,\${compleasm_headers},\${quast_headers}" > ${label}_metrics.csv
+    echo "${step_name},\${compleasm_values},\${quast_values}" >> ${label}_metrics.csv
     """
 }
 
@@ -52,31 +52,31 @@ process merge_quality_reports {
     val final_assembly_name
 
     output:
-    path "quality_trace.tsv", emit: trace
-    path "quality_final.tsv", emit: final_report
+    path "quality_trace.csv", emit: trace
+    path "quality_final.csv", emit: final_report
 
     script:
     """
     set -euo pipefail
 
     # Define processing order
-    order=(metamdbg_metrics.tsv fcs_initial_metrics.tsv hifiasm_metrics.tsv fcs_final_metrics.tsv)
+    order=(metamdbg_metrics.csv fcs_initial_metrics.csv hifiasm_metrics.csv fcs_final_metrics.csv)
 
     # Write header from first available file
     for f in "\${order[@]}"; do
         if [[ -f "\$f" ]]; then
-            head -1 "\$f" > quality_trace.tsv
+            head -1 "\$f" > quality_trace.csv
             break
         fi
     done
 
     # Append data rows in order
     for f in "\${order[@]}"; do
-        [[ -f "\$f" ]] && tail -n +2 "\$f" >> quality_trace.tsv
+        [[ -f "\$f" ]] && tail -n +2 "\$f" >> quality_trace.csv
     done
 
-    # Create quality_final.tsv with 'file' column
-    head -1 fcs_final_metrics.tsv | sed 's/^Step/file/' > quality_final.tsv
-    tail -n +2 fcs_final_metrics.tsv | sed 's/^fcs_gx round 2/${final_assembly_name}/' >> quality_final.tsv
+    # Create quality_final.csv with 'file' column
+    head -1 fcs_final_metrics.csv | sed 's/^Step/file/' > quality_final.csv
+    tail -n +2 fcs_final_metrics.csv | sed 's/^fcs_gx round 2/${final_assembly_name}/' >> quality_final.csv
     """
 }
