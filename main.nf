@@ -129,7 +129,7 @@ For additional details, consult README.md.
             }
 
             def manifest_entries = qc_manifest
-                .map { label, asm -> tuple(label.toString(), asm.toString()) }
+                .map { label, asm -> [label.toString(), asm.toString()] }
                 .collect()
                 .filter { entries -> entries && entries.size() > 0 }
                 .map { entries -> tuple(entries, params.quality_library, params.quality_lineage) }

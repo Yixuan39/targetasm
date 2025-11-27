@@ -24,34 +24,35 @@ process quality_check {
         [entry[0].toString(), entry[1].toString()]
     }
 
-    def copyCommands = []
-    def manifestLines = []
-    normalized_entries.eachWithIndex { entry, idx ->
-        def label = entry[0].replaceAll(/[^A-Za-z0-9_.-]/, '_')
-        def source = entry[1]
-        def lower = source.toLowerCase()
-        def sourceName = new File(source).name
-        def baseName = "${String.format('%02d', idx)}_${label}_${sourceName}"
-        def needsDecompress = lower.endsWith('.gz')
-        def dest = needsDecompress ? baseName.replaceFirst(/\.gz$/,'') : baseName
-        def cmd = needsDecompress ? "pigz -dc \"${source}\" > \"${dest}\"" : "cp \"${source}\" \"${dest}\""
-        copyCommands << cmd
-        manifestLines << "${entry[0]}\t${dest}"
-    }
-    def copyScript = copyCommands.join('\n')
-    def manifestContent = manifestLines.join('\n') + '\n'
+    def manifestContent = normalized_entries.collect { entry -> "${entry[0]}\t${entry[1]}" }.join('\n') + '\n'
     """
     set -euo pipefail
-    ${copyScript}
     cat <<'EOF' > assemblies.tsv
     ${manifestContent}
     EOF
 
-    QUALITY_MANIFEST=assemblies.tsv \
-    QUALITY_OUTPUT=quality_metrics.tsv \
-    QUALITY_THREADS=${task.cpus} \
-    QUALITY_LIBRARY="${library_path}" \
-    QUALITY_LINEAGE="${lineage}" \
-    python bin/quality-check.py
+    while IFS=$'\t' read -r label source || [[ -n "\${label}" ]]; do
+        [[ -z "\${label}" ]] && continue
+
+        compleasm run \
+            --assembly_path "\${source}" \
+            --output_dir "compleasm_\${label}" \
+            --threads ${task.cpus} \
+            --library_path "${library_path}" \
+            --lineage "${lineage}"
+
+        quast \
+            --output-dir "quast_\${label}" \
+            --threads ${task.cpus} \
+            --eukaryote "\${source}"
+
+        python bin/quality_merge.py "\${label}" "\${source}" "." row.tsv
+
+        if [[ ! -f quality_metrics.tsv ]]; then
+            cat row.tsv > quality_metrics.tsv
+        else
+            tail -n +2 row.tsv >> quality_metrics.tsv
+        fi
+    done < assemblies.tsv
     """
 }
