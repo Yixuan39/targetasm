@@ -31,11 +31,8 @@ process quality_check {
     ${manifestContent}
     EOF
 
-    while read line || [[ -n "\${line}" ]]; do
-        [[ -z "\${line}" ]] && continue
-
-        label="\${line%%$'\t'*}"
-        source="\${line#*$'\t'}"
+    while read label source || [[ -n "\${label}" ]]; do
+        [[ -z "\${label}" ]] && continue
 
         compleasm run \
             --assembly_path "\${source}" \
