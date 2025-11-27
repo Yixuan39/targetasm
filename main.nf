@@ -87,13 +87,10 @@ For additional details, consult README.md.
         metamdbg_assemble(reads_channel)
 
         def meta_for_fcs = metamdbg_assemble.out.assembly
-        def meta_for_qc = metamdbg_assemble.out.assembly
-
         def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, initial_base) }
         fcs_gx_initial_clean(initial_fcs_input)
 
         def initial_for_minimap = fcs_gx_initial_clean.out.clean_fasta
-        def initial_for_qc = fcs_gx_initial_clean.out.clean_fasta
 
         def minimap_input = initial_for_minimap.map { draft -> tuple(draft, reads_path) }
         minimap2_align(minimap_input)
@@ -104,13 +101,10 @@ For additional details, consult README.md.
         hifiasm_reassemble(rasusa_subset.out.subset_reads)
 
         def hifiasm_for_fcs = hifiasm_reassemble.out.assembly
-        def hifiasm_for_qc = hifiasm_reassemble.out.assembly
-
         def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, final_base) }
         fcs_gx_final_clean(final_fcs_input)
 
         def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
-        def final_for_qc = fcs_gx_final_clean.out.clean_fasta
 
         def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
         deliver_final_clean(delivery_input)
@@ -119,22 +113,14 @@ For additional details, consult README.md.
             if (!params.quality_lineage) {
                 error "Parameter --quality_lineage is required when --quality_library is provided"
             }
-            def qc_manifest = meta_for_qc.map { asm -> tuple('metamdbg', asm) }
-                .mix(initial_for_qc.map { asm -> tuple('fcs_initial', asm) })
-                .mix(hifiasm_for_qc.map { asm -> tuple('hifiasm', asm) })
-                .mix(final_for_qc.map { asm -> tuple('fcs_final', asm) })
-            .filter { _label, asm ->
-                def lower = asm.toString().toLowerCase()
-                !(lower.endsWith('.fastq') || lower.endsWith('.fastq.gz') || lower.endsWith('.fq') || lower.endsWith('.fq.gz'))
-            }
 
-            def manifest_entries = qc_manifest
-                .map { label, asm -> [label.toString(), asm.toString()] }
-                .collect()
-                .filter { entries -> entries && entries.size() > 0 }
-                .map { entries -> tuple(entries, params.quality_library, params.quality_lineage) }
+            def qc_metamdbg = metamdbg_assemble.out.assembly.map { asm -> tuple('metamdbg', 'metaMDBG', asm, params.quality_library, params.quality_lineage, 'false') }
+            def qc_fcs_initial = fcs_gx_initial_clean.out.clean_fasta.map { asm -> tuple('fcs_initial', 'fcs_gx round 1', asm, params.quality_library, params.quality_lineage, 'false') }
+            def qc_hifiasm = hifiasm_reassemble.out.assembly.map { asm -> tuple('hifiasm', 'hifiasm', asm, params.quality_library, params.quality_lineage, 'false') }
+            def qc_fcs_final = fcs_gx_final_clean.out.clean_fasta.map { asm -> tuple('fcs_final', 'fcs_gx round 2', asm, params.quality_library, params.quality_lineage, 'true') }
 
-            quality_check(manifest_entries)
+            def qc_inputs = qc_metamdbg.mix(qc_fcs_initial).mix(qc_hifiasm).mix(qc_fcs_final)
+            quality_check(qc_inputs)
         } else {
             log.warn "Skipping quality check because --quality_library was not provided."
         }
