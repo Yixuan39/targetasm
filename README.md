@@ -7,11 +7,12 @@ A reference-independent framework for the assembly of high-quality eukaryotic ge
 1. **metamdbg_assemble** – Builds an initial draft assembly from the supplied HiFi reads.
 2. **fcs_gx_clean (round 1)** – Screens the draft assembly against the configured GX database and removes contaminants.
 3. **minimap2_align** – Maps the original reads back to the cleaned draft to retain only well-supported sequences.
-4. **rasusa_subset** – Optionally downsamples mapped reads to the requested number of bases (passes the full set through if not specified).
+4. **rasusa_subset** *(optional)* – Downsamples mapped reads to the requested number of bases; skipped if `--rasusa_bases` is not set.
 5. **hifiasm_reassemble** – Re-assembles the filtered reads to improve structural accuracy.
 6. **fcs_gx_clean (round 2)** – Performs a final contamination screen on the polished assembly to generate the release-ready genome.
 7. **deliver_final_clean** – Copies the final FCS-cleaned assembly to the requested output directory with a stable filename.
-8. **quality_check** *(optional)* – When `--quality_library` and `--quality_lineage` are provided, Compleasm + QUAST run on the metaMDBG, initial FCS, hifiasm, and final FCS assemblies, producing a combined QC table.
+8. **quality_check** *(optional)* – When `--quality_library` and `--quality_lineage` are provided, Compleasm + QUAST run on the metaMDBG, initial FCS, hifiasm, and final FCS assemblies.
+9. **merge_quality_reports** *(optional)* – Combines QC metrics into `quality_trace.csv` (all steps) and `quality_final.csv` (final assembly).
 
 ## Workflow DAG
 
@@ -21,17 +22,20 @@ graph TD
     MDBG --> FCS1["fcs-gx clean (round 1)"]
     FCS1 --> MM["minimap2 align"]
     RAW --> MM
-    MM --> RAS["rasusa subset"]
-    TB["Target Bases"] --> RAS
-    RAS --> HIFI["hifiasm assemble"]
+    MM -->|rasusa_bases set| RAS["rasusa subset"]
+    RAS --> HIFI["hifiasm reassemble"]
+    MM -->|rasusa_bases not set| HIFI
     HIFI --> FCS2["fcs-gx clean (round 2)"]
     FCS2 --> DELIVER["deliver final clean"]
-    %% Optional QC fan-in
-    MDBG -.-> QC["quality check (Compleasm + QUAST)"]
+    
+    %% Optional QC branch
+    MDBG -.-> QC["quality_check (Compleasm + QUAST)"]
     FCS1 -.-> QC
     HIFI -.-> QC
     FCS2 -.-> QC
-    QC -. optional .-> REPORT["quality_metrics.tsv"]
+    QC -.-> MERGE["merge_quality_reports"]
+    MERGE -.-> TRACE["quality_trace.csv"]
+    MERGE -.-> FINAL["quality_final.csv"]
 ```
 
 ## Quick Start
