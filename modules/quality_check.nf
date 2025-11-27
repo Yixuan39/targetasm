@@ -31,8 +31,11 @@ process quality_check {
     ${manifestContent}
     EOF
 
-    while IFS=$'\t' read -r label source || [[ -n "\${label}" ]]; do
-        [[ -z "\${label}" ]] && continue
+    while read line || [[ -n "\${line}" ]]; do
+        [[ -z "\${line}" ]] && continue
+
+        label="\${line%%$'\t'*}"
+        source="\${line#*$'\t'}"
 
         compleasm run \
             --assembly_path "\${source}" \
