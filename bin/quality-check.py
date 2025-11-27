@@ -94,7 +94,10 @@ def load_manifest(path: Path) -> List[Tuple[str, Path]]:
         if not line.strip():
             continue
         label, asm_path = line.split("\t", 1)
-        entries.append((label.strip(), Path(asm_path.strip())))
+        assembly_path = Path(asm_path.strip())
+        if not assembly_path.exists():
+            raise FileNotFoundError(f"Assembly not found: {assembly_path}")
+        entries.append((label.strip(), assembly_path))
     if not entries:
         raise ValueError(f"Manifest is empty: {path}")
     return entries
@@ -107,8 +110,6 @@ def main() -> None:
 
     rows: List[pd.DataFrame] = []
     for label, assembly in assemblies:
-        if not assembly.exists():
-            raise FileNotFoundError(f"Assembly not found: {assembly}")
         rows.append(
             evaluate(
                 label=label,

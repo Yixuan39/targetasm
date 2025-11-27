@@ -4,7 +4,7 @@ process quality_check {
     tag "quality check"
     publishDir "${params.outdir}/quality", mode: 'copy'
     cpus params.threads
-    memory '32 GB'
+    memory "${params.threads * 8} GB"
 
     input:
     tuple val(manifest_entries), val(library_path), val(lineage)
@@ -25,15 +25,21 @@ process quality_check {
     }
 
     def copyCommands = []
+    def manifestLines = []
     normalized_entries.eachWithIndex { entry, idx ->
         def label = entry[0].replaceAll(/[^A-Za-z0-9_.-]/, '_')
         def source = entry[1]
+        def lower = source.toLowerCase()
         def sourceName = new File(source).name
-        def dest = "${String.format('%02d', idx)}_${label}_${sourceName}"
-        copyCommands << ["cp \"${source}\" \"${dest}\"", "${entry[0]}\t${dest}"]
+        def baseName = "${String.format('%02d', idx)}_${label}_${sourceName}"
+        def needsDecompress = lower.endsWith('.gz')
+        def dest = needsDecompress ? baseName.replaceFirst(/\.gz$/,'') : baseName
+        def cmd = needsDecompress ? "pigz -dc \"${source}\" > \"${dest}\"" : "cp \"${source}\" \"${dest}\""
+        copyCommands << cmd
+        manifestLines << "${entry[0]}\t${dest}"
     }
-    def copyScript = copyCommands.collect { cmd -> cmd[0] }.join('\n')
-    def manifestContent = copyCommands.collect { cmd -> cmd[1] }.join('\n') + '\n'
+    def copyScript = copyCommands.join('\n')
+    def manifestContent = manifestLines.join('\n') + '\n'
     """
     set -euo pipefail
     ${copyScript}
