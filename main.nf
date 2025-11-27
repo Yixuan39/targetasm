@@ -52,6 +52,7 @@ Parameters:
     --tax_id           NCBI taxonomy identifier used by FCS-GX (required).
     --rasusa_bases     Optional target number of bases for rasusa downsampling (genome size * coverage);
                                          omit to retain all mapped reads.
+    --rasusa_seed      Random seed for rasusa subsampling (default: 42).
     --threads          Maximum CPU cores assigned to threaded processes
                                          (default: ${params.threads}).
     --hifiasm_option   Extra options passed to hifiasm (default: '-l 1').
@@ -91,10 +92,14 @@ For additional details, consult README.md.
         def minimap_input = initial_for_minimap.map { draft -> tuple(draft, reads_path) }
         minimap2_align(minimap_input)
 
-        def rasusa_input = minimap2_align.out.mapped_reads.map { mapped_reads -> tuple(mapped_reads, params.rasusa_bases) }
-        rasusa_subset(rasusa_input)
-
-        hifiasm_reassemble(rasusa_subset.out.subset_reads)
+        // Skip rasusa if rasusa_bases is not set
+        if (params.rasusa_bases) {
+            def rasusa_input = minimap2_align.out.mapped_reads.map { mapped_reads -> tuple(mapped_reads, params.rasusa_bases) }
+            rasusa_subset(rasusa_input)
+            hifiasm_reassemble(rasusa_subset.out.subset_reads)
+        } else {
+            hifiasm_reassemble(minimap2_align.out.mapped_reads)
+        }
 
         def hifiasm_for_fcs = hifiasm_reassemble.out.assembly
         def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, final_base) }
