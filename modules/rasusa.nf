@@ -13,12 +13,13 @@ process rasusa_subset {
     path "subset.fastq.gz", emit: subset_reads
 
     script:
+    def seedOption = params.rasusa_seed ? "--seed ${params.rasusa_seed}" : ""
     """
     set -euo pipefail
 
     rasusa reads \
         --bases ${bases} \
-        --seed ${params.rasusa_seed} \
+        ${seedOption} \
         --output-type g \
         --output subset.fastq.gz \
         ${reads}
