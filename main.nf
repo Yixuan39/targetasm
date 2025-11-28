@@ -96,19 +96,16 @@ For additional details, consult README.md.
         minimap2_align(minimap_input)
 
         // Subsample with rasusa if target_bases is set, otherwise pass through
-        def hifiasm_input
         if (params.target_bases) {
             log.info "Rasusa subsampling enabled: targeting ${params.target_bases} bases"
             rasusa_subset(
                 minimap2_align.out.mapped_reads.map { reads -> tuple(reads, params.target_bases) }
             )
-            hifiasm_input = rasusa_subset.out.subset_reads
+            hifiasm_reassemble(rasusa_subset.out.subset_reads)
         } else {
             log.warn "Rasusa subsampling SKIPPED (--target_bases not set). All mapped reads will be used for reassembly."
-            hifiasm_input = minimap2_align.out.mapped_reads
+            hifiasm_reassemble(minimap2_align.out.mapped_reads)
         }
-
-        hifiasm_reassemble(hifiasm_input)
 
         def hifiasm_for_fcs = hifiasm_reassemble.out.assembly
         def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, final_base) }
