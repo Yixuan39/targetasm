@@ -75,8 +75,8 @@ process merge_quality_reports {
         [[ -f "\$f" ]] && tail -n +2 "\$f" >> quality_trace.csv
     done
 
-    # Create quality_final.csv with 'file' column
-    head -1 fcs_final_metrics.csv | sed 's/^Step/file/' > quality_final.csv
-    tail -n +2 fcs_final_metrics.csv | sed 's/^fcs_gx round 2/${final_assembly_name}/' >> quality_final.csv
+    # Create quality_final.csv with 'file' column, remove Assembly column
+    head -1 fcs_final_metrics.csv | sed 's/^Step/file/' | sed 's/,Assembly//' > quality_final.csv
+    tail -n +2 fcs_final_metrics.csv | sed 's/^fcs_gx round 2/${final_assembly_name}/' | cut -d',' -f1,3- >> quality_final.csv
     """
 }
