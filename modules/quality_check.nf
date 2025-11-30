@@ -31,9 +31,9 @@ process quality_check {
     compleasm_headers=\$(awk -F: 'NR>1 {printf "%s%s", sep, \$1; sep=","}' compleasm_out/summary.txt)
     compleasm_values=\$(awk -F: 'NR>1 {gsub(/^[ \\t]+/, "", \$2); split(\$2, a, ","); printf "%s%s", sep, a[1]; sep=","}' compleasm_out/summary.txt)
 
-    # Extract quast headers and values
-    quast_headers=\$(awk -F'\\t' '{printf "%s%s", sep, \$1; sep=","}' quast_out/report.tsv)
-    quast_values=\$(awk -F'\\t' '{printf "%s%s", sep, \$2; sep=","}' quast_out/report.tsv)
+    # Extract quast headers and values (skip first "Assembly" row)
+    quast_headers=\$(awk -F'\\t' 'NR>1 {printf "%s%s", sep, \$1; sep=","}' quast_out/report.tsv)
+    quast_values=\$(awk -F'\\t' 'NR>1 {printf "%s%s", sep, \$2; sep=","}' quast_out/report.tsv)
 
     # Write CSV with Step column
     echo "Step,\${compleasm_headers},\${quast_headers}" > ${label}_metrics.csv
@@ -75,8 +75,7 @@ process merge_quality_reports {
         [[ -f "\$f" ]] && tail -n +2 "\$f" >> quality_trace.csv
     done
 
-    # Create quality_final.csv with 'file' column, remove Assembly column
-    head -1 fcs_final_metrics.csv | sed 's/^Step/file/' | sed 's/,Assembly//' > quality_final.csv
-    tail -n +2 fcs_final_metrics.csv | sed 's/^fcs_gx round 2/${final_assembly_name}/' | cut -d',' -f1,3- >> quality_final.csv
+    # Create quality_final.csv with 'file' column
+    sed '1s/^Step/file/; 2s/^fcs_gx round 2/${final_assembly_name}/' fcs_final_metrics.csv > quality_final.csv
     """
 }
