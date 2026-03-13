@@ -32,6 +32,7 @@ process fcs_gx_clean {
         --input input.fasta \
         --action-report "${output_base}.fcs_gx_report.txt" \
         --output output.fasta
-    pigz -p ${task.cpus} -c output.fasta > ${output_base}.fasta.gz
+    
+    gzip -c output.fasta > ${output_base}.fasta.gz
     """
 }
