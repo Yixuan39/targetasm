@@ -1,7 +1,0 @@
-curl -s 'https://quay.io/api/v1/repository/biocontainers/minimap2/tag/' | grep -m 1 -o '"name": *"[^"]*2.28[^"]*"'
-curl -s 'https://quay.io/api/v1/repository/biocontainers/samtools/tag/' | grep -m 1 -o '"name": *"[^"]*1.22[^"]*"'
-curl -s 'https://quay.io/api/v1/repository/biocontainers/hifiasm/tag/' | grep -m 1 -o '"name": *"[^"]*0.25[^"]*"'
-curl -s 'https://quay.io/api/v1/repository/biocontainers/gfatools/tag/' | grep -m 1 -o '"name": *"[^"]*0.5[^"]*"'
-curl -s 'https://quay.io/api/v1/repository/biocontainers/pigz/tag/' | grep -m 1 -o '"name": *"[^"]*2.8[^"]*"'
-curl -s 'https://quay.io/api/v1/repository/biocontainers/compleasm/tag/' | grep -m 1 -o '"name": *"[^"]*0.2.7[^"]*"'
-curl -s 'https://quay.io/api/v1/repository/biocontainers/quast/tag/' | grep -m 1 -o '"name": *"[^"]*5.3.0[^"]*"'
