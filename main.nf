@@ -80,20 +80,15 @@ For additional details, consult README.md.
         def reads_path = file(params.reads)
         def gx_db_path = file(params.gx_db)
 
-        def reads_channel = channel.of(reads_path)
-        def initial_base = 'fcs_initial'
-        def final_base = 'fcs_final'
+        metamdbg_assemble(channel.of(reads_path))
 
-        metamdbg_assemble(reads_channel)
+        fcs_gx_initial_clean(
+            metamdbg_assemble.out.assembly.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_initial') }
+        )
 
-        def meta_for_fcs = metamdbg_assemble.out.assembly
-        def initial_fcs_input = meta_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, initial_base) }
-        fcs_gx_initial_clean(initial_fcs_input)
-
-        def initial_for_minimap = fcs_gx_initial_clean.out.clean_fasta
-
-        def minimap_input = initial_for_minimap.map { draft -> tuple(draft, reads_path) }
-        minimap2_align(minimap_input)
+        minimap2_align(
+            fcs_gx_initial_clean.out.clean_fasta.map { draft -> tuple(draft, reads_path) }
+        )
 
         // Subsample with rasusa if target_bases is set, otherwise pass through
         if (params.target_bases) {
@@ -107,31 +102,26 @@ For additional details, consult README.md.
             hifiasm_reassemble(minimap2_align.out.mapped_reads)
         }
 
-        def hifiasm_for_fcs = hifiasm_reassemble.out.assembly
-        def final_fcs_input = hifiasm_for_fcs.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, final_base) }
-        fcs_gx_final_clean(final_fcs_input)
+        fcs_gx_final_clean(
+            hifiasm_reassemble.out.assembly.map { assembly -> tuple(assembly, gx_db_path, params.tax_id, 'fcs_final') }
+        )
 
-        def final_for_delivery = fcs_gx_final_clean.out.clean_fasta
-
-        def delivery_input = final_for_delivery.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
-        deliver_final_clean(delivery_input)
+        deliver_final_clean(
+            fcs_gx_final_clean.out.clean_fasta.map { cleaned -> tuple(cleaned, "${reads_path.simpleName}.fasta.gz") }
+        )
 
         if (params.quality_library) {
             if (!params.quality_lineage) {
                 error "Parameter --quality_lineage is required when --quality_library is provided"
             }
 
-            def qc_metamdbg = metamdbg_assemble.out.assembly.map { asm -> tuple('metamdbg', 'metaMDBG', asm, params.quality_library, params.quality_lineage, 'false') }
-            def qc_fcs_initial = fcs_gx_initial_clean.out.clean_fasta.map { asm -> tuple('fcs_initial', 'fcs_gx round 1', asm, params.quality_library, params.quality_lineage, 'false') }
-            def qc_hifiasm = hifiasm_reassemble.out.assembly.map { asm -> tuple('hifiasm', 'hifiasm', asm, params.quality_library, params.quality_lineage, 'false') }
-            def qc_fcs_final = fcs_gx_final_clean.out.clean_fasta.map { asm -> tuple('fcs_final', 'fcs_gx round 2', asm, params.quality_library, params.quality_lineage, 'true') }
+            def qc_inputs = metamdbg_assemble.out.assembly.map { asm -> tuple('metamdbg', 'metaMDBG', asm, params.quality_library, params.quality_lineage, 'false') }
+                .mix(fcs_gx_initial_clean.out.clean_fasta.map { asm -> tuple('fcs_initial', 'fcs_gx round 1', asm, params.quality_library, params.quality_lineage, 'false') })
+                .mix(hifiasm_reassemble.out.assembly.map { asm -> tuple('hifiasm', 'hifiasm', asm, params.quality_library, params.quality_lineage, 'false') })
+                .mix(fcs_gx_final_clean.out.clean_fasta.map { asm -> tuple('fcs_final', 'fcs_gx round 2', asm, params.quality_library, params.quality_lineage, 'true') })
 
-            def qc_inputs = qc_metamdbg.mix(qc_fcs_initial).mix(qc_hifiasm).mix(qc_fcs_final)
             quality_check(qc_inputs)
-
-            def all_metrics = quality_check.out.metrics.collect()
-            def final_name = reads_path.simpleName
-            merge_quality_reports(all_metrics, final_name)
+            merge_quality_reports(quality_check.out.metrics.collect(), reads_path.simpleName)
         } else {
             log.warn "Skipping quality check because --quality_library was not provided."
         }
