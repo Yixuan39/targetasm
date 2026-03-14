@@ -6,7 +6,7 @@ process compleasm_run {
     memory "${params.threads * 8} GB"
 
     input:
-    tuple val(label), val(step_name), path(assembly), val(library_path), val(lineage), val(is_final)
+    tuple val(label), val(step_name), path(assembly), path(library_path), val(lineage), val(is_final)
 
     output:
     path "compleasm_out", emit: out_dir

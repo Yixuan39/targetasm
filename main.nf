@@ -115,10 +115,12 @@ For additional details, consult README.md.
                 error "Parameter --quality_lineage is required when --quality_library is provided"
             }
 
-            def qc_inputs = metamdbg_assemble.out.assembly.map { asm -> tuple('metamdbg', 'metaMDBG', asm, params.quality_library, params.quality_lineage, 'false') }
-                .mix(fcs_gx_initial_clean.out.clean_fasta.map { asm -> tuple('fcs_initial', 'fcs_gx round 1', asm, params.quality_library, params.quality_lineage, 'false') })
-                .mix(hifiasm_reassemble.out.assembly.map { asm -> tuple('hifiasm', 'hifiasm', asm, params.quality_library, params.quality_lineage, 'false') })
-                .mix(fcs_gx_final_clean.out.clean_fasta.map { asm -> tuple('fcs_final', 'fcs_gx round 2', asm, params.quality_library, params.quality_lineage, 'true') })
+            def quality_lib_path = file(params.quality_library)
+
+            def qc_inputs = metamdbg_assemble.out.assembly.map { asm -> tuple('metamdbg', 'metaMDBG', asm, quality_lib_path, params.quality_lineage, 'false') }
+                .mix(fcs_gx_initial_clean.out.clean_fasta.map { asm -> tuple('fcs_initial', 'fcs_gx round 1', asm, quality_lib_path, params.quality_lineage, 'false') })
+                .mix(hifiasm_reassemble.out.assembly.map { asm -> tuple('hifiasm', 'hifiasm', asm, quality_lib_path, params.quality_lineage, 'false') })
+                .mix(fcs_gx_final_clean.out.clean_fasta.map { asm -> tuple('fcs_final', 'fcs_gx round 2', asm, quality_lib_path, params.quality_lineage, 'true') })
 
             quality_check(qc_inputs)
             merge_quality_reports(quality_check.out.metrics.collect(), reads_path.simpleName)
