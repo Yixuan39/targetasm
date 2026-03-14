@@ -43,7 +43,7 @@ Usage:
         --threads <int> \\
         --hifiasm_option '<opts>' \\
         --outdir <results_dir> \\
-        --quality_library <path/to/compleasm_db> \
+        --quality_library <path/to/compleasm_db> \\
         --quality_lineage <lineage>
 
 Parameters:
@@ -52,10 +52,10 @@ Parameters:
     --tax_id           NCBI taxonomy identifier used by FCS-GX (required).
     --target_bases     Optional target number of bases for subsampling (genome size * coverage);
                                          omit to use all mapped reads.
-    --rasusa_seed      Random seed for rasusa subsampling (default: 42).
+    --rasusa_seed      Random seed for rasusa subsampling (default: 0).
     --threads          Maximum CPU cores assigned to threaded processes
                                          (default: ${params.threads}).
-    --hifiasm_option   Extra options passed to hifiasm (default: '-l 1').
+    --hifiasm_option   Extra options passed to hifiasm (default: '-l 2').
     --keep_intermediates
                        Keep intermediate files (draft assemblies, mapped reads, etc.);
                                          use this flag to retain them (default: off).
