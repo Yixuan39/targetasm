@@ -5,6 +5,7 @@ process fcs_gx_clean {
     publishDir "${params.outdir}/fcs_gx", mode: 'copy', pattern: "*.fasta.gz", enabled: params.keep_intermediates
     publishDir "${params.outdir}/fcs_gx", mode: 'copy', pattern: "*.fcs_gx_report.txt"
     cpus params.threads
+    container 'biocontainers/ncbi-fcs-gx:0.5.5--h9948957_0'
 
     input:
     tuple path(assembly), path(gx_db), val(tax_id), val(output_base)
