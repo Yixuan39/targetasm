@@ -1,6 +1,6 @@
-# TEA (Target Eukaryotic genome Assembly)
+# TEG-Recover: Target Eukaryotic Genome Recovery from contaminated long-read sequencing samples
 
-A reference-independent framework for the assembly of high-quality eukaryotic genomes from complex and contaminated metagenomic samples.
+A reference-independent framework for the assembly of high-quality eukaryotic genomes from highly contaminated samples.
 
 ## Workflow Overview
 
