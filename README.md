@@ -16,27 +16,7 @@ A reference-independent framework for the assembly of high-quality eukaryotic ge
 
 ## Workflow DAG
 
-```mermaid
-graph TD
-    RAW["Raw HiFi reads"] --> MDBG["metaMDBG assemble"]
-    MDBG --> FCS1["fcs-gx clean (round 1)"]
-    FCS1 --> MM["minimap2 align"]
-    RAW --> MM
-    MM -->|target_bases set| RAS["rasusa subset"]
-    RAS --> HIFI["hifiasm reassemble"]
-    MM -->|target_bases not set| HIFI
-    HIFI --> FCS2["fcs-gx clean (round 2)"]
-    FCS2 --> DELIVER["deliver final clean"]
-    
-    %% Optional QC branch
-    MDBG -.-> QC["quality_check (Compleasm + QUAST)"]
-    FCS1 -.-> QC
-    HIFI -.-> QC
-    FCS2 -.-> QC
-    QC -.-> MERGE["merge_quality_reports"]
-    MERGE -.-> TRACE["quality_trace.csv"]
-    MERGE -.-> FINAL["quality_final.csv"]
-```
+![TEG-Recover pipeline diagram](image/TEG-Recover-pipeline.drawio.png)
 
 ## Quick Start
 
