@@ -1,6 +1,4 @@
-# TEG-Recover: Target Eukaryotic Genome Recovery from contaminated long-read sequencing samples
-
-A reference-independent framework for the assembly of high-quality eukaryotic genomes from highly contaminated samples.
+# target-asm: a workflow for recovering and assembling target eukaryotic genomes from highly contaminated samples
 
 ## Workflow Overview
 
