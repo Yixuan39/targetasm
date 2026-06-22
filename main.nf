@@ -41,6 +41,7 @@ Usage:
         --tax_id <ncbi_tax_id> \\
         --target_bases <bases> \\
         --threads <int> \\
+        --fcs_gx_memory <memory> \\
         --hifiasm_option '<opts>' \\
         --outdir <results_dir> \\
         --quality_library <path/to/compleasm_db> \\
@@ -55,6 +56,8 @@ Parameters:
     --rasusa_seed      Random seed for rasusa subsampling (default: 0).
     --threads          Maximum CPU cores assigned to threaded processes
                                          (default: ${params.threads}).
+    --fcs_gx_memory    Memory requested for each FCS-GX process
+                                         (default: ${params.fcs_gx_memory}).
     --hifiasm_option   Extra options passed to hifiasm (default: '-l 2').
     --keep_intermediates
                        Keep intermediate files (draft assemblies, mapped reads, etc.);
