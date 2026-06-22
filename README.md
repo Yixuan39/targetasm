@@ -46,7 +46,7 @@ nextflow run main.nf \
   --reads /path/to/sample.fastq.gz \
   --gx_db /path/to/fcs-gx-db-prefix \
   --tax_id <target_ncbi_tax_id> \
-  --target_bases 5.4e9 \
+  --target_bases <expected_genome_size> \
   --outdir results \
   -profile apptainer
 ```
