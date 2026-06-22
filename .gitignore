@@ -74,3 +74,4 @@ rsconnect/
 
 .nextflow/*
 *nextflow.log*
+work/*
