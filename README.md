@@ -25,7 +25,7 @@ The motivating benchmark was contaminated PacBio HiFi sequencing of obligate bio
 
 - Nextflow
 - One of Docker, Singularity, or Apptainer
-- PacBio HiFi reads in FASTQ.GZ format
+- PacBio HiFi reads in fastq.gz format
 - An NCBI FCS-GX database
 - An NCBI taxonomy ID for the target clade
 
