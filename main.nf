@@ -32,7 +32,7 @@ workflow {
     main:
         if (params.help) {
             log.info """
-TEA (Target Eukaryotic genome Assembly)
+targetasm — Target eukaryotic genome assembly
 
 Usage:
     nextflow run main.nf \\

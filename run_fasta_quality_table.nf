@@ -5,8 +5,8 @@ nextflow.enable.dsl=2
  * Standalone FASTA QC table helper.
  *
  * This helper is intentionally separate from modules/quality_check.nf.
- * The TEA quality_check module tracks multiple assembly steps and writes
- * quality_trace.csv plus quality_final.csv for the full TEA workflow.
+ * The targetasm quality_check module tracks multiple assembly steps and writes
+ * quality_trace.csv plus quality_final.csv for the full targetasm workflow.
  *
  * This helper is for already-generated FASTA files only. It runs Compleasm
  * and QUAST for each input FASTA, then merges all samples into one table:

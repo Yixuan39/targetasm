@@ -1,8 +1,8 @@
-# target-asm
+# targetasm
 
 Target eukaryotic genome assembly from contaminated PacBio HiFi read sets.
 
-`target-asm` is a Nextflow DSL2 workflow for recovering target eukaryotic genomes from mixed long-read sequencing libraries. It is intended for samples where the organism of interest is sequenced together with host, symbiont, microbial, environmental, or culture-associated DNA.
+`targetasm` is a Nextflow DSL2 workflow for recovering target eukaryotic genomes from mixed long-read sequencing libraries. It is intended for samples where the organism of interest is sequenced together with host, symbiont, microbial, environmental, or culture-associated DNA.
 
 The workflow is reference-independent with respect to the target genome. It first assembles the full read set as a metagenome, removes non-target contigs with NCBI FCS-GX, recruits original reads that support the target-enriched draft, optionally downsamples those reads, reassembles with hifiasm, and runs a final FCS-GX screen.
 
@@ -10,7 +10,7 @@ The motivating benchmark was contaminated PacBio HiFi sequencing of obligate bio
 
 ## Workflow
 
-![target-asm workflow](image/target-asm-pipeline.drawio.png)
+![targetasm workflow](image/targetasm-pipeline.drawio.png)
 
 1. `metaMDBG` assembles the input HiFi reads as a metagenome.
 2. `FCS-GX` removes contigs outside the requested target taxon.
@@ -34,8 +34,8 @@ All workflow tools are configured as containers in `nextflow.config`.
 ## Get the Workflow
 
 ```bash
-git clone https://github.com/Yixuan39/target-asm.git
-cd target-asm
+git clone https://github.com/Yixuan39/targetasm.git
+cd targetasm
 nextflow run main.nf --help
 ```
 
@@ -55,9 +55,9 @@ Set `--tax_id` to the NCBI taxonomy ID for the target organism or target clade. 
 
 To use all mapped reads for hifiasm reassembly, omit `--target_bases`.
 
-## When to Use target-asm
+## When to Use targetasm
 
-Use `target-asm` when contamination is too complex for read-length filtering or whole-library assembly alone. It is designed for cases where:
+Use `targetasm` when contamination is too complex for read-length filtering or whole-library assembly alone. It is designed for cases where:
 
 - the target is a eukaryote represented by a minority or mixed fraction of reads;
 - contaminant reads overlap the target reads in length or quality;
@@ -100,7 +100,7 @@ nextflow run main.nf \
   -profile apptainer
 ```
 
-When QC is enabled, target-asm evaluates the metaMDBG assembly, the first FCS-GX-cleaned assembly, the hifiasm assembly, and the final FCS-GX-cleaned assembly.
+When QC is enabled, targetasm evaluates the metaMDBG assembly, the first FCS-GX-cleaned assembly, the hifiasm assembly, and the final FCS-GX-cleaned assembly.
 
 ## Outputs
 
@@ -123,7 +123,7 @@ results/
     quality_final.csv
 ```
 
-When `--keep_intermediates` is set, target-asm also publishes intermediate outputs under `metaMDBG/`, `minimap2/`, `rasusa/`, `hifiasm/`, and `fcs_gx/`.
+When `--keep_intermediates` is set, targetasm also publishes intermediate outputs under `metaMDBG/`, `minimap2/`, `rasusa/`, `hifiasm/`, and `fcs_gx/`.
 
 ## Profiles
 
@@ -141,6 +141,6 @@ Profiles can be combined, for example `-profile slurm,apptainer`, when running o
 
 ## Notes
 
-- NCBI recommends 512 GiB shared memory for FCS-GX with the standard database; running below this can be extremely slow. target-asm requests `--fcs_gx_memory '512 GB'` by default.
-- `target-asm` removes non-target taxonomic contamination, but target-derived organellar contigs may remain and should be handled downstream if nuclear-only assemblies are required.
+- NCBI recommends 512 GiB shared memory for FCS-GX with the standard database; running below this can be extremely slow. targetasm requests `--fcs_gx_memory '512 GB'` by default.
+- `targetasm` removes non-target taxonomic contamination, but target-derived organellar contigs may remain and should be handled downstream if nuclear-only assemblies are required.
 - For the downy mildew benchmark, Oomycota was used as the target clade (`--tax_id 4762`) and `stramenopiles` was used for Compleasm QC. For other targets, choose the matching NCBI taxon and Compleasm/BUSCO lineage.
