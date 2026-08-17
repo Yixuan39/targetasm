@@ -42,7 +42,7 @@ nextflow run main.nf --help
 ## Quick Start
 
 ```bash
-nextflow run main.nf \
+nextflow run Yixuan39/targetasm \
   --reads /path/to/sample.fastq.gz \
   --gx_db /path/to/fcs-gx-db-prefix \
   --tax_id <target_ncbi_tax_id> \
