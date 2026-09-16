@@ -1,0 +1,144 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/Yixuan39/targetasm/main/nextflow_schema.json",
+    "title": "Yixuan39/targetasm pipeline parameters",
+    "description": "Reference-independent assembly of target genomes from mixed long-read samples",
+    "type": "object",
+    "$defs": {
+        "input_output_options": {
+            "title": "Input and output options",
+            "description": "Input and output options.",
+            "type": "object",
+            "properties": {
+                "reads": {
+                    "type": "string",
+                    "description": "Input PacBio HiFi reads in FASTQ.GZ format.",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.(fastq|fq)\\.gz$"
+                },
+                "gx_db": {
+                    "type": "string",
+                    "description": "Directory containing the complete FCS-GX database bundle.",
+                    "format": "directory-path",
+                    "exists": true
+                },
+                "tax_id": {
+                    "type": "integer",
+                    "description": "NCBI taxonomy identifier supplied to FCS-GX.",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                },
+                "outdir": {
+                    "type": "string",
+                    "description": "Directory for published results.",
+                    "format": "directory-path",
+                    "default": "."
+                },
+                "keep_intermediates": {
+                    "type": "boolean",
+                    "description": "Publish intermediate assemblies and recruited reads."
+                }
+            },
+            "required": [
+                "reads",
+                "gx_db",
+                "tax_id",
+                "outdir"
+            ]
+        },
+        "assembly_options": {
+            "title": "Assembly options",
+            "description": "Assembly options.",
+            "type": "object",
+            "properties": {
+                "target_bases": {
+                    "type": [
+                        "integer",
+                        "string"
+                    ],
+                    "description": "Optional target number of recruited bases; omit to retain all mapped reads.",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807,
+                    "help_text": "Accepts a positive whole number of bases, including integer-valued scientific notation (e.g. 5e9 or 5.4e9). Values are checked for exact integer conversion before tasks start.",
+                    "pattern": "^\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$"
+                },
+                "rasusa_seed": {
+                    "type": "integer",
+                    "description": "Random seed for subsampling recruited reads.",
+                    "minimum": 0,
+                    "maximum": 9223372036854775807,
+                    "default": 0
+                },
+                "hifiasm_option": {
+                    "type": "string",
+                    "description": "Extra hifiasm arguments; --primary is always added.",
+                    "default": "-l 2"
+                },
+                "threads": {
+                    "type": "integer",
+                    "description": "Maximum CPU cores for threaded processes.",
+                    "minimum": 1,
+                    "maximum": 2147483647,
+                    "default": 24
+                }
+            }
+        },
+        "quality_options": {
+            "title": "Optional assembly quality checks",
+            "description": "Optional assembly quality checks.",
+            "type": "object",
+            "properties": {
+                "quality_library": {
+                    "type": "string",
+                    "description": "Local Compleasm lineage library; providing it enables QC.",
+                    "format": "directory-path",
+                    "exists": true
+                },
+                "quality_lineage": {
+                    "type": "string",
+                    "description": "Compleasm lineage name, required when quality_library is supplied.",
+                    "pattern": "^[A-Za-z0-9_]*$"
+                }
+            }
+        },
+        "general_options": {
+            "title": "General options",
+            "description": "General options.",
+            "type": "object",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "description": "Print the parameter help message and exit."
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/assembly_options"
+        },
+        {
+            "$ref": "#/$defs/quality_options"
+        },
+        {
+            "$ref": "#/$defs/general_options"
+        }
+    ],
+    "dependentSchemas": {
+        "quality_library": {
+            "properties": {
+                "quality_lineage": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "quality_lineage"
+            ]
+        }
+    }
+}

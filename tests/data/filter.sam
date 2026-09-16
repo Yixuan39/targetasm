@@ -1,0 +1,7 @@
+@HD	VN:1.6	SO:queryname
+@SQ	SN:contig	LN:1000
+mapped	0	contig	1	60	4M	*	0	0	ACGT	IIII
+reverse	16	contig	20	60	4M	*	0	0	AAGC	ABCD
+secondary	256	contig	40	60	4M	*	0	0	AAAA	IIII
+supplementary	2048	contig	60	60	4M	*	0	0	CCCC	IIII
+unmapped	4	*	0	0	*	*	0	0	GGGG	IIII

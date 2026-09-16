@@ -1,0 +1,182 @@
+nextflow_pipeline {
+    name 'targetasm community module wiring'
+    script '../main.nf'
+    test('QC False, subsampling False') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                keep_intermediates = false
+                target_bases = null
+                quality_library = null
+                quality_lineage = ""
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/sample.fasta.gz").exists()
+            def compressed = new java.util.zip.GZIPInputStream(new FileInputStream("$outputDir/sample.fasta.gz"))
+            assert compressed.withReader { reader -> reader.text }.trim() == ''
+            assert path("$outputDir/metaMDBG/sample.contigs.fasta.gz").exists() == params.keep_intermediates
+            assert path("$outputDir/fcs_gx/sample.fcs_initial.fcs_gx_report.txt").exists()
+            assert path("$outputDir/fcs_gx/sample.fcs_final.fcs_gx_report.txt").exists()
+            assert path("$outputDir/pipeline_info/software_versions.tsv").exists()
+            def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
+            assert versions.contains('RASUSA_READS') == false
+            assert versions.contains('COMPLEASM_RUN') == false
+            assert path("$outputDir/quality/quality_final.csv").exists() == false
+        }
+    }
+    test('QC False, subsampling True') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                keep_intermediates = true
+                target_bases = '1e3'
+                quality_library = null
+                quality_lineage = ""
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/sample.fasta.gz").exists()
+            def compressed = new java.util.zip.GZIPInputStream(new FileInputStream("$outputDir/sample.fasta.gz"))
+            assert compressed.withReader { reader -> reader.text }.trim() == ''
+            assert path("$outputDir/metaMDBG/sample.contigs.fasta.gz").exists() == params.keep_intermediates
+            assert path("$outputDir/fcs_gx/sample.fcs_initial.fcs_gx_report.txt").exists()
+            assert path("$outputDir/fcs_gx/sample.fcs_final.fcs_gx_report.txt").exists()
+            assert path("$outputDir/pipeline_info/software_versions.tsv").exists()
+            def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
+            assert versions.contains('RASUSA_READS') == true
+            assert versions.contains('COMPLEASM_RUN') == false
+            assert path("$outputDir/quality/quality_final.csv").exists() == false
+        }
+    }
+    test('QC True, subsampling False') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                keep_intermediates = true
+                target_bases = null
+                quality_library = System.getenv("TARGETASM_TEST_ROOT") + "/library"
+                quality_lineage = "eukaryota"
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/sample.fasta.gz").exists()
+            def compressed = new java.util.zip.GZIPInputStream(new FileInputStream("$outputDir/sample.fasta.gz"))
+            assert compressed.withReader { reader -> reader.text }.trim() == ''
+            assert path("$outputDir/metaMDBG/sample.contigs.fasta.gz").exists() == params.keep_intermediates
+            assert path("$outputDir/fcs_gx/sample.fcs_initial.fcs_gx_report.txt").exists()
+            assert path("$outputDir/fcs_gx/sample.fcs_final.fcs_gx_report.txt").exists()
+            assert path("$outputDir/pipeline_info/software_versions.tsv").exists()
+            def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
+            assert versions.contains('RASUSA_READS') == false
+            assert versions.contains('COMPLEASM_RUN') == true
+            assert path("$outputDir/quality/quality_final.csv").exists() == true
+            assert path("$outputDir/quality/quality_trace.csv").readLines().size() == 5
+            assert path("$outputDir/quality/quality_final.csv").text.contains('sample.fasta.gz')
+        }
+    }
+    test('QC True, subsampling True') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                keep_intermediates = true
+                target_bases = '1e3'
+                quality_library = System.getenv("TARGETASM_TEST_ROOT") + "/library"
+                quality_lineage = "eukaryota"
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/sample.fasta.gz").exists()
+            def compressed = new java.util.zip.GZIPInputStream(new FileInputStream("$outputDir/sample.fasta.gz"))
+            assert compressed.withReader { reader -> reader.text }.trim() == ''
+            assert path("$outputDir/metaMDBG/sample.contigs.fasta.gz").exists() == params.keep_intermediates
+            assert path("$outputDir/fcs_gx/sample.fcs_initial.fcs_gx_report.txt").exists()
+            assert path("$outputDir/fcs_gx/sample.fcs_final.fcs_gx_report.txt").exists()
+            assert path("$outputDir/pipeline_info/software_versions.tsv").exists()
+            def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
+            assert versions.contains('RASUSA_READS') == true
+            assert versions.contains('COMPLEASM_RUN') == true
+            assert path("$outputDir/quality/quality_final.csv").exists() == true
+            assert path("$outputDir/quality/quality_trace.csv").readLines().size() == 5
+            assert path("$outputDir/quality/quality_final.csv").text.contains('sample.fasta.gz')
+        }
+    }
+    test('reject fractional target bases before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                target_bases = 0.5
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+    test('reject QC without a lineage before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                quality_library = System.getenv('TARGETASM_TEST_ROOT') + '/library'
+                quality_lineage = ''
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+    test('reject fractional scientific notation before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                target_bases = '1.5e0'
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stdout.join('\n').contains('--target_bases must be a positive integer')
+        }
+    }
+    test('reject missing reads before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                reads = System.getenv('TARGETASM_TEST_ROOT') + '/missing.fastq.gz'
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stderr.join('\n').contains('missing.fastq.gz')
+        }
+    }
+    test('reject misspelled parameters before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                taxid = 4762
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stderr.join('\n').contains('taxid')
+        }
+    }
+
+}

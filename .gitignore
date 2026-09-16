@@ -41,9 +41,6 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
-
 # translation temp files
 po/*~
 
@@ -74,3 +71,9 @@ rsconnect/
 
 .nextflow/*
 *nextflow.log*
+.nf-test/
+work/
+pipeline_info/
+__pycache__/
+graphify-out/
+runs/

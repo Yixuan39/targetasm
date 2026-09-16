@@ -1,0 +1,89 @@
+{
+  "name": "Yixuan39/targetasm",
+  "homePage": "https://github.com/Yixuan39/targetasm",
+  "repos": {
+    "https://github.com/nf-core/modules.git": {
+      "modules": {
+        "nf-core": {
+          "compleasm/run": {
+            "branch": "master",
+            "git_sha": "fda0a889ed06ac33683aa501ad395dd7a4ee8c66",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "fcsgx/cleangenome": {
+            "branch": "master",
+            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "fcsgx/rungx": {
+            "branch": "master",
+            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "gfatools/gfa2fa": {
+            "branch": "master",
+            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "gunzip": {
+            "branch": "master",
+            "git_sha": "0902eac3012baaf4f9ab6513c8c55acc9353c96c",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "hifiasm": {
+            "branch": "master",
+            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "htslib/bgziptabix": {
+            "branch": "master",
+            "git_sha": "37f69c8ca3eb3d038a5d44f33a329e49f44bd4f2",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "metamdbg/asm": {
+            "branch": "master",
+            "git_sha": "fd67bc24ff4bd097b749dfcf4deb207d88f55fd3",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "minimap2/align": {
+            "branch": "master",
+            "git_sha": "135d883a43b1a2324b4112cd270cf22e20835533",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "quast": {
+            "branch": "master",
+            "git_sha": "9a034dd2c5df2c9b283e09ddf2667d9118b4ccd7",
+            "installed_by": [
+              "modules"
+            ]
+          },
+          "samtools/bam2fq": {
+            "branch": "master",
+            "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
+            "installed_by": [
+              "modules"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

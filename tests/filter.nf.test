@@ -1,0 +1,23 @@
+nextflow_process {
+    name 'targetasm retains primary mapped HiFi reads'
+    script '../modules/nf-core/samtools/bam2fq/main.nf'
+    process 'SAMTOOLS_BAM2FQ'
+    config '../conf/modules.config'
+
+    test('exclude unmapped, secondary and supplementary; restore reverse strand') {
+        when {
+            process {
+                """
+                input[0] = [[id:'filter', single_end:true], file('$projectDir/tests/data/filter.sam', checkIfExists:true)]
+                input[1] = false
+                """
+            }
+        }
+        then {
+            assert process.success
+            def stream = new java.util.zip.GZIPInputStream(new FileInputStream(process.out.reads[0][1].toString()))
+            def lines = stream.withReader { reader -> reader.readLines() }
+            assert lines == ['@mapped', 'ACGT', '+', 'IIII', '@reverse', 'GCTT', '+', 'DCBA']
+        }
+    }
+}

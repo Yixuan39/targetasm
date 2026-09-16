@@ -1,18 +1,20 @@
-# TEA (Target Eukaryotic genome Assembly)
+# targetasm
 
 A reference-independent framework for the assembly of high-quality eukaryotic genomes from complex and contaminated metagenomic samples.
 
 ## Workflow Overview
 
-1. **metamdbg_assemble** – Builds an initial draft assembly from the supplied HiFi reads.
-2. **fcs_gx_clean (round 1)** – Screens the draft assembly against the configured GX database and removes contaminants.
-3. **minimap2_align** – Maps the original reads back to the cleaned draft to retain only well-supported sequences.
-4. **rasusa_subset** *(optional)* – Downsamples mapped reads to the requested number of bases; skipped if `--target_bases` is not set.
-5. **hifiasm_reassemble** – Re-assembles the filtered reads to improve structural accuracy.
-6. **fcs_gx_clean (round 2)** – Performs a final contamination screen on the polished assembly to generate the release-ready genome.
-7. **deliver_final_clean** – Copies the final FCS-cleaned assembly to the requested output directory with a stable filename.
-8. **quality_check** *(optional)* – When `--quality_library` and `--quality_lineage` are provided, Compleasm + QUAST run on the metaMDBG, initial FCS, hifiasm, and final FCS assemblies.
-9. **merge_quality_reports** *(optional)* – Combines QC metrics into `quality_trace.csv` (all steps) and `quality_final.csv` (final assembly).
+1. **metaMDBG** builds a draft assembly from PacBio HiFi reads.
+2. **FCS-GX** screens and cleans the draft.
+3. **minimap2 + samtools** recruit primary mapped reads.
+4. **rasusa** optionally subsamples to `--target_bases`.
+5. **hifiasm + gfatools** reassemble recruited reads and convert GFA to FASTA.
+6. **FCS-GX** performs the final screen and publishes the cleaned assembly.
+7. **Compleasm + QUAST** optionally evaluate all four assembly stages and produce combined CSV reports.
+
+The development version reuses 11 pinned nf-core modules. See the
+[module migration notes](docs/module-migration.md) for versions, behavior changes,
+remaining local code, and validation commands.
 
 ## Workflow DAG
 
@@ -26,7 +28,7 @@ graph TD
     RAS --> HIFI["hifiasm reassemble"]
     MM -->|target_bases not set| HIFI
     HIFI --> FCS2["fcs-gx clean (round 2)"]
-    FCS2 --> DELIVER["deliver final clean"]
+    FCS2 --> DELIVER["compress and publish final assembly"]
     
     %% Optional QC branch
     MDBG -.-> QC["quality_check (Compleasm + QUAST)"]
@@ -43,11 +45,19 @@ graph TD
 ```bash
 nextflow run main.nf \
     --reads /path/to/sample.fastq.gz \
-    --gx_db /path/to/gx-db-prefix \
+    --gx_db /path/to/gx-db-directory \
     --tax_id 4762 \
     --outdir results \
-    -profile slurm
+    -profile slurm,apptainer
 ```
+
+Requires **Nextflow ≥26.04** and a supported container engine (or Conda).
+Parameters are validated with the pinned `nf-schema@2.7.2` plugin and
+[`nextflow_schema.json`](nextflow_schema.json). Run `nextflow run main.nf --help`
+to see parameter help and download the plugin before using an offline environment.
+Unknown parameters and invalid inputs are rejected before tasks start.
+`--gx_db` must be a directory containing the complete FCS-GX database bundle.
+Use `-profile docker` locally, or combine an executor and container profile on HPC.
 
 ### Optional Parameters
 
@@ -69,4 +79,29 @@ nextflow run main.nf ... \
     --rasusa_seed 123
 ```
 
-Adjust `params.threads` or other parameters in `nextflow.config` to tailor the run to your system.
+Set `--threads` on the command line. Resources are in `conf/base.config`;
+tool arguments and publication rules are in `conf/modules.config`. Provide
+cluster-specific queues and resource overrides through `-c site.config`.
+
+## Outputs
+
+- `<outdir>/<sample>.fasta.gz`: final clean assembly (sample uses `reads.simpleName`).
+- `<outdir>/fcs_gx/`: initial and final FCS-GX reports.
+- `<outdir>/quality/quality_trace.csv`: QC across the four assembly stages, when enabled.
+- `<outdir>/quality/quality_final.csv`: final assembly QC, when enabled.
+- `<outdir>/pipeline_info/`: module-reported software versions and execution trace.
+
+`--keep_intermediates` also publishes the draft, initially cleaned assembly,
+recruited reads, optional subsampled reads and hifiasm assembly.
+
+## Development checks
+
+```bash
+nextflow run main.nf --help
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 tests/run_stub.py
+```
+
+The stub suite needs Nextflow and nf-test; it does not run the assembly tools.
+See [validation details](docs/module-migration.md#checks) for the real tool tests
+and [SC1982 smoke validation](docs/sc1982-smoke.md) for the small real-data run.

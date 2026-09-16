@@ -1,0 +1,22 @@
+nextflow_process {
+    name 'targetasm QUAST without a reference'
+    script '../modules/nf-core/quast/main.nf'
+    process 'QUAST'
+    config '../conf/modules.config'
+
+    test('emit a parseable single-assembly report') {
+        when {
+            process {
+                """
+                input[0] = [[id:'assembly'], [file('$projectDir/tests/data/assembly.fasta', checkIfExists:true)]]
+                input[1] = [[:], []]
+                input[2] = [[:], []]
+                """
+            }
+        }
+        then {
+            assert process.success
+            assert path(process.out.tsv[0][1]).text.contains('N50\t1200')
+        }
+    }
+}
