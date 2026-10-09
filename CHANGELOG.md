@@ -5,7 +5,7 @@ All notable changes to `targetasm` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 0.2.0dev
+## [0.2.0] - 2026-10-09
 
 ### Changed
 - Rebuilt the workflow on 11 pinned nf-core modules; see
@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `conda` profile and `pipeline_info/` software versions and execution trace.
 - nf-test stub tests and GitHub Actions CI.
+- `test` profile for a small functional run on a laptop (supply `--reads` and `--gx_db`).
 
 ### Removed
 - `--fcs_gx_memory`; override `FCSGX_RUNGX` memory with a `-c` config.

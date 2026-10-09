@@ -1,4 +1,4 @@
-# Community module migration (0.2.0dev)
+# Community module migration (0.2.0)
 
 The analysis still follows metaMDBG → FCS-GX → read recruitment → optional
 rasusa → hifiasm → FCS-GX, with optional Compleasm and QUAST at four stages.

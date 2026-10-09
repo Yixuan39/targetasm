@@ -8,7 +8,7 @@ The workflow is reference-independent with respect to the target genome. It firs
 
 The motivating benchmark was contaminated PacBio HiFi sequencing of obligate biotrophic oomycetes, but the strategy is not oomycete-specific. Any eukaryotic target with an appropriate NCBI taxonomy ID for FCS-GX can be used.
 
-> **Development version (`0.2.0dev`).** This branch rebuilds the workflow on 11 pinned nf-core modules. See the [module migration notes](docs/module-migration.md) for tool versions, behavior changes, and the code that remains local.
+Since 0.2.0, targetasm is built on 11 pinned nf-core modules. See the [module migration notes](docs/module-migration.md) for tool versions, behavior changes, and the code that remains local.
 
 ## Workflow
 
@@ -36,7 +36,7 @@ Tool containers and Conda environments come from the pinned nf-core modules. Par
 ## Get the Workflow
 
 ```bash
-git clone -b dev https://github.com/Yixuan39/targetasm.git
+git clone https://github.com/Yixuan39/targetasm.git
 cd targetasm
 nextflow run main.nf --help
 ```
