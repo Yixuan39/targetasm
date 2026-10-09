@@ -155,27 +155,5 @@ When `--keep_intermediates` is set, targetasm also publishes the metaMDBG draft 
 | `apptainer` | Enable Apptainer containers with automounts. |
 | `conda` | Use Conda environments instead of containers. |
 
-Profiles can be combined, for example `-profile slurm,apptainer`, when running on a SLURM cluster. On SLURM systems, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources.
+Profiles can be combined, for example `-profile slurm,apptainer`, when running on a SLURM cluster. On the HPC, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources.
 
-## Notes
-
-- NCBI recommends 512 GiB shared memory for FCS-GX with the standard database; running below this can be extremely slow. targetasm requests `500 GB` for `FCSGX_RUNGX` by default. The `--fcs_gx_memory` parameter from 0.1.0 has been removed; change this with a `-c` config instead:
-
-  ```groovy
-  process {
-      withName: FCSGX_RUNGX { memory = '700 GB' }
-  }
-  ```
-
-- `targetasm` removes non-target taxonomic contamination, but target-derived organellar contigs may remain and should be handled downstream if nuclear-only assemblies are required.
-- For the downy mildew benchmark, Oomycota was used as the target clade (`--tax_id 4762`) and `stramenopiles` was used for Compleasm QC. For other targets, choose the matching NCBI taxon and Compleasm/BUSCO lineage.
-
-## Development Checks
-
-```bash
-nextflow run main.nf --help
-python3 -m unittest discover -s tests -p 'test_*.py'
-python3 tests/run_stub.py
-```
-
-The stub suite needs Nextflow and nf-test; it does not run the assembly tools. See [validation details](docs/module-migration.md#checks) for the real tool tests and [SC1982 smoke validation](docs/sc1982-smoke.md) for the small real-data run.
