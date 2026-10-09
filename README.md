@@ -12,24 +12,7 @@ The motivating benchmark was contaminated PacBio HiFi sequencing of obligate bio
 
 ## Workflow
 
-```mermaid
-graph TD
-    RAW["Raw HiFi reads"] --> MDBG["metaMDBG assemble"]
-    MDBG --> FCS1["FCS-GX clean (round 1)"]
-    FCS1 --> MM["minimap2 align + samtools extract"]
-    RAW --> MM
-    MM -->|target_bases set| RAS["rasusa subset"]
-    RAS --> HIFI["hifiasm reassemble + gfatools gfa2fa"]
-    MM -->|target_bases not set| HIFI
-    HIFI --> FCS2["FCS-GX clean (round 2)"]
-    FCS2 --> DELIVER["final assembly"]
-
-    MDBG -.-> QC["Compleasm + QUAST"]
-    FCS1 -.-> QC
-    HIFI -.-> QC
-    FCS2 -.-> QC
-    QC -.-> MERGE["quality_trace.csv / quality_final.csv"]
-```
+![targetasm workflow](image/targetasm-pipeline.drawio.png)
 
 1. `metaMDBG` assembles the input HiFi reads as a metagenome.
 2. `FCS-GX` removes contigs outside the requested target taxon.
@@ -123,6 +106,17 @@ nextflow run main.nf \
 ```
 
 When QC is enabled, targetasm evaluates the metaMDBG assembly, the first FCS-GX-cleaned assembly, the hifiasm assembly, and the final FCS-GX-cleaned assembly.
+
+To QC existing assemblies without running the full workflow, use the standalone helper. It runs Compleasm and QUAST on each FASTA and merges the results into one table:
+
+```bash
+nextflow run run_fasta_quality_table.nf \
+  --fasta '/path/to/*.fasta.gz' \
+  --output quality.tsv \
+  --quality_library /path/to/compleasm_db \
+  --quality_lineage <busco_lineage> \
+  -profile apptainer
+```
 
 ## Outputs
 
