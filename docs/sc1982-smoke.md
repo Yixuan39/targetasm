@@ -5,7 +5,7 @@ functional test of the pipeline, not an assembly-quality benchmark.
 
 ## Input and environment
 
-The smallest raw FASTQ in `/Volumes/YY3/downy/GSL_Data/fastq/` was
+The smallest raw FASTQ in the downy mildew HiFi collection was
 `Pseudoperonospora_cubensis_SC1982.fastq.gz` (approximately 12 GB compressed).
 The existing SC1982 assembly script uses tax ID `4762`.
 
@@ -27,7 +27,7 @@ identified or removed.** Use the complete production database and representative
 coverage for scientific validation.
 
 QC was enabled for all four stages with the existing
-`/Users/yixuanyang/db/compleasm/stramenopiles_odb12` (2025-07-01 dataset).
+local Compleasm `stramenopiles_odb12` library (2025-07-01 dataset).
 The library was copied to `runs/sc1982-smoke/compleasm-library`, avoiding a
 whole-home Docker bind mount. Compleasm updates library metadata while it runs,
 so the module stages the library by copy. The source copy's size and timestamps
@@ -41,7 +41,7 @@ From the repository root:
 mkdir -p runs/sc1982-smoke/input
 rasusa reads --bases 1gb --seed 1982 \
     --output runs/sc1982-smoke/input/SC1982.fastq.gz \
-    /Volumes/YY3/downy/GSL_Data/fastq/Pseudoperonospora_cubensis_SC1982.fastq.gz
+    /path/to/Pseudoperonospora_cubensis_SC1982.fastq.gz
 
 nextflow -log runs/sc1982-smoke/nextflow.log run main.nf \
     -profile docker \
