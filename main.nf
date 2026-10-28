@@ -1,32 +1,40 @@
 #!/usr/bin/env nextflow
 
-include { validateParameters; paramsHelp } from 'plugin/nf-schema'
+include { validateParameters; paramsHelp; samplesheetToList } from 'plugin/nf-schema'
 include { TARGETASM } from './workflows/targetasm'
+
+// Whole number of bases from e.g. 5400000000 or 5.4e9; null when unset.
+def targetBases(value, String name) {
+    if (value == null || value == []) {
+        return null
+    }
+    try {
+        def bases = value.toString().toBigDecimal().longValueExact()
+        if (bases > 0) {
+            return bases
+        }
+    }
+    catch (Exception _e) {
+        // reported below
+    }
+    error("${name} must be a positive integer number of bases (e.g. 5e9)")
+}
 
 workflow {
     if (params.help) {
-        log.info paramsHelp(beforeText: 'targetasm\n\n', command: 'nextflow run main.nf --reads reads.fastq.gz --gx_db gx-db --tax_id 4762 --outdir results')
+        log.info paramsHelp(
+            beforeText: 'targetasm\n\n',
+            command: 'nextflow run Yixuan39/targetasm -r <version> -profile <singularity|apptainer|docker|conda> --input samplesheet.csv --gx_db <fcs-gx-db-dir> --tax_id <taxid> --outdir results',
+        )
         exit 0
     }
     validateParameters()
-    def target_bases = null
-    if (params.target_bases != null) {
-        try {
-            target_bases = params.target_bases.toString().toBigDecimal().longValueExact()
-        }
-        catch (Exception _e) {
-            error('--target_bases must be a positive integer number of bases (e.g. 5e9)')
-        }
-        if (target_bases <= 0) {
-            error('--target_bases must be positive')
-        }
+    def default_bases = targetBases(params.target_bases, '--target_bases')
+    def samples = samplesheetToList(params.input, "${projectDir}/assets/schema_input.json").collect { meta, reads ->
+        def bases = targetBases(meta.target_bases, "target_bases for sample ${meta.id}") ?: default_bases
+        tuple(meta + [single_end: true, target_bases: bases], reads)
     }
-
-    def reads = file(params.reads, checkIfExists: true)
     def gx_db = file(params.gx_db, checkIfExists: true)
-    if (!(reads.simpleName ==~ /[A-Za-z0-9][A-Za-z0-9_.-]*/)) {
-        error 'The reads filename must start with a letter or number and contain only letters, numbers, dots, underscores and hyphens'
-    }
     def quality_library = params.quality_library ? file(params.quality_library, checkIfExists: true) : []
-    TARGETASM(reads, gx_db, quality_library, target_bases)
+    TARGETASM(channel.fromList(samples), gx_db, quality_library)
 }

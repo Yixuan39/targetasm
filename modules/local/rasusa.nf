@@ -6,8 +6,7 @@ process RASUSA_READS {
     container 'quay.io/biocontainers/rasusa:2.2.2--hc1c3326_0'
 
     input:
-    tuple val(meta), path(fastq)
-    val bases
+    tuple val(meta), path(fastq) // meta.target_bases: bases to keep
     val seed
 
     output:
@@ -22,7 +21,7 @@ process RASUSA_READS {
     """
     rasusa reads \\
         ${args} \\
-        --bases ${bases} \\
+        --bases ${meta.target_bases} \\
         --seed ${seed} \\
         --output-type g \\
         --output ${meta.id}.subset.fastq.gz \\

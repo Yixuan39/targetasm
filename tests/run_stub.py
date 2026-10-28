@@ -14,6 +14,18 @@ with tempfile.TemporaryDirectory(prefix='targetasm-stub-') as directory:
     (root / 'library').mkdir()
     with gzip.open(root / 'sample.fastq.gz', 'wt') as handle:
         handle.write('@read1\nACGT\n+\nIIII\n')
+    (root / 'reads.fq').write_text('@read1\nACGT\n+\nIIII\n')
+    samplesheets = {
+        'samplesheet.csv': ['sample,sample.fastq.gz'],
+        'multi.csv': ['a,sample.fastq.gz,1e3', 'b,reads.fq,'],
+        'missing.csv': ['sample,missing.fastq.gz'],
+        'duplicate.csv': ['a,sample.fastq.gz', 'a,reads.fq'],
+    }
+    for name, rows in samplesheets.items():
+        lines = ['sample,reads,target_bases'] + [
+            ','.join([fields[0], str(root / fields[1])] + fields[2:]) for fields in (row.split(',') for row in rows)
+        ]
+        (root / name).write_text('\n'.join(lines) + '\n')
     mock = root / 'version_only.py'
     mock.write_text('''#!/usr/bin/env python3
 import gzip, pathlib, sys
@@ -37,4 +49,11 @@ else:
     env = dict(os.environ, TARGETASM_TEST_ROOT=str(root), PATH=f'{root}:{os.environ["PATH"]}', NXF_OFFLINE='true')
     result = subprocess.run(['nf-test', 'test', 'tests/main.nf.test', '--ci'], cwd=ROOT, env=env)
     assert not any((root / 'library').iterdir()), 'Compleasm must not modify the shared input library'
+
+    # A local run inside a 512 MB Slurm job must refuse FCS-GX up front, not start it and get OOM-killed.
+    slurm = subprocess.run(
+        ['nextflow', 'run', str(ROOT / 'main.nf'), '-stub-run', '-c', str(ROOT / 'tests/nextflow.config'), '--outdir', str(root / 'slurm')],
+        cwd=root, env=dict(env, SLURM_MEM_PER_NODE='512'), capture_output=True, text=True,
+    )
+    assert slurm.returncode != 0 and 'exceeds available memory' in slurm.stdout + slurm.stderr, slurm.stdout + slurm.stderr
     raise SystemExit(result.returncode)

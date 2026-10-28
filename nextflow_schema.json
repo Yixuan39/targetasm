@@ -10,22 +10,28 @@
             "description": "Input and output options.",
             "type": "object",
             "properties": {
-                "reads": {
+                "input": {
                     "type": "string",
-                    "description": "Input PacBio HiFi reads in FASTQ.GZ format.",
+                    "description": "Samplesheet (CSV or TSV) with columns sample, reads and optional target_bases.",
+                    "help_text": "One row per sample. `reads` is a PacBio HiFi FASTQ file (.fastq/.fq, optionally gzipped). `target_bases` overrides --target_bases for that sample; leave it empty to use --target_bases.",
                     "format": "file-path",
                     "exists": true,
-                    "pattern": "^\\S+\\.(fastq|fq)\\.gz$"
+                    "schema": "assets/schema_input.json",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.(csv|tsv)$",
+                    "errorMessage": "The samplesheet must be an existing .csv or .tsv file with no spaces in its path"
                 },
                 "gx_db": {
                     "type": "string",
-                    "description": "Directory containing the complete FCS-GX database bundle.",
+                    "description": "FCS-GX database directory (all.gxi, all.gxs, ...). Download: https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart",
+                    "help_text": "The complete database is about 470 GB and FCS-GX needs about 500 GB of RAM to screen against it. Since 0.2.0 this is the directory itself, not the `all` file prefix used by 0.1.0.",
                     "format": "directory-path",
-                    "exists": true
+                    "exists": true,
+                    "errorMessage": "--gx_db must be an existing directory that contains the FCS-GX database (all.gxi, all.gxs, ...), not the 'all' file prefix used by targetasm 0.1.0. Download: https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart"
                 },
                 "tax_id": {
                     "type": "integer",
-                    "description": "NCBI taxonomy identifier supplied to FCS-GX.",
+                    "description": "NCBI taxonomy ID of the target organism or clade, used by FCS-GX (e.g. 4762 for Oomycota).",
                     "minimum": 1,
                     "maximum": 2147483647
                 },
@@ -41,7 +47,7 @@
                 }
             },
             "required": [
-                "reads",
+                "input",
                 "gx_db",
                 "tax_id",
                 "outdir"
@@ -60,8 +66,9 @@
                     "description": "Optional target number of recruited bases; omit to retain all mapped reads.",
                     "minimum": 1,
                     "maximum": 9223372036854775807,
-                    "help_text": "Accepts a positive whole number of bases, including integer-valued scientific notation (e.g. 5e9 or 5.4e9). Values are checked for exact integer conversion before tasks start.",
-                    "pattern": "^\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$"
+                    "help_text": "Accepts a positive whole number of bases, including integer-valued scientific notation (e.g. 5e9 or 5.4e9). Values are checked for exact integer conversion before tasks start. A samplesheet target_bases value overrides this for that sample.",
+                    "pattern": "^\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                    "errorMessage": "--target_bases must be a whole number of bases, e.g. 5400000000 or 5.4e9"
                 },
                 "rasusa_seed": {
                     "type": "integer",
@@ -77,7 +84,8 @@
                 },
                 "threads": {
                     "type": "integer",
-                    "description": "Maximum CPU cores for threaded processes.",
+                    "description": "CPUs for multi-threaded tasks; also sets their memory to 8 GB per thread. FCS-GX always requests 500 GB.",
+                    "help_text": "metaMDBG, minimap2, hifiasm, Compleasm, QUAST and FCS-GX use this many CPUs. All of them except FCS-GX request 8 GB of memory per thread (24 threads = 192 GB), so lower --threads on smaller machines.",
                     "minimum": 1,
                     "maximum": 2147483647,
                     "default": 24
@@ -91,7 +99,7 @@
             "properties": {
                 "quality_library": {
                     "type": "string",
-                    "description": "Local Compleasm lineage library; providing it enables QC.",
+                    "description": "Local Compleasm library directory, e.g. from `compleasm download <lineage> -L <dir>`; providing it enables QC.",
                     "format": "directory-path",
                     "exists": true
                 },
@@ -133,7 +141,8 @@
             "properties": {
                 "quality_lineage": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "errorMessage": "--quality_lineage is required with --quality_library (e.g. stramenopiles)"
                 }
             },
             "required": [

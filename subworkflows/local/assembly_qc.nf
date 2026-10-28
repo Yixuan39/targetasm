@@ -14,5 +14,5 @@ workflow ASSEMBLY_QC {
     COLLECT_QUALITY_METRICS(COMPLEASM_RUN.out.summary.join(QUAST.out.tsv, failOnDuplicate: true, failOnMismatch: true))
 
     emit:
-    metrics = COLLECT_QUALITY_METRICS.out.metrics
+    metrics = COLLECT_QUALITY_METRICS.out.metrics // [meta, <stage>_metrics.csv]
 }

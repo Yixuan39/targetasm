@@ -27,37 +27,45 @@ Since 0.2.0, targetasm is built on 11 pinned nf-core modules. See the [module mi
 
 - Nextflow ≥ 26.04
 - One of Docker, Singularity, Apptainer, or Conda
-- PacBio HiFi reads in `.fastq.gz` format (one sample per run)
-- A directory containing the complete NCBI FCS-GX database bundle
+- PacBio HiFi reads in FASTQ format (`.fastq` or `.fq`, optionally gzipped)
+- The complete NCBI FCS-GX database (about 470 GB; see the [FCS-GX download instructions](https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart)) and a node with about 500 GB of RAM for the two FCS-GX screens
 - An NCBI taxonomy ID for the target clade
+- Optional, for assembly QC: a local Compleasm library, e.g. `compleasm download stramenopiles -L compleasm_library` (see the [Compleasm README](https://github.com/huangnengCSU/compleasm))
 
 Tool containers and Conda environments come from the pinned nf-core modules. Parameters are validated with the `nf-schema@2.7.2` plugin against [`nextflow_schema.json`](nextflow_schema.json); unknown parameters and invalid inputs are rejected before any task starts. Run `--help` once to download the plugin before using an offline environment.
 
-## Get the Workflow
-
-```bash
-git clone https://github.com/Yixuan39/targetasm.git
-cd targetasm
-nextflow run main.nf --help
-```
-
 ## Quick Start
 
+Nextflow downloads the workflow from GitHub; pin a release with `-r`:
+
 ```bash
-nextflow run main.nf \
-  --reads /path/to/sample.fastq.gz \
-  --gx_db /path/to/gx-db-directory \
-  --tax_id <target_ncbi_tax_id> \
-  --target_bases <expected_genome_size> \
-  --outdir results \
-  -profile slurm,apptainer
+nextflow run Yixuan39/targetasm -r 0.2.1 --help
 ```
 
-Set `--tax_id` to the NCBI taxonomy ID for the target organism or target clade. Adjust `--target_bases` to the expected genome size multiplied by the desired coverage. For example, a 90 Mb genome at 60x coverage is `5.4e9`.
+Describe one sample per row in a samplesheet:
 
-To use all mapped reads for hifiasm reassembly, omit `--target_bases`.
+```csv
+sample,reads,target_bases
+isolate1,/path/to/isolate1.fastq.gz,5.4e9
+isolate2,/path/to/isolate2.fastq,
+```
 
-The sample name is taken from the reads filename (`sample.fastq.gz` → `sample`) and must start with a letter or number and contain only letters, numbers, dots, underscores, and hyphens.
+Then run:
+
+```bash
+nextflow run Yixuan39/targetasm -r 0.2.1 \
+  -profile singularity \
+  --input samplesheet.csv \
+  --gx_db /path/to/fcs-gx-db \
+  --tax_id <target_ncbi_tax_id> \
+  --outdir results
+```
+
+Set `--tax_id` to the NCBI taxonomy ID for the target organism or target clade. `target_bases` is the number of recruited bases kept for hifiasm: the expected genome size multiplied by the desired coverage. For example, a 90 Mb genome at 60x coverage is `5.4e9`. Leave it empty to use `--target_bases`, or to use all mapped reads when `--target_bases` is not set.
+
+Sample names must start with a letter or number and contain only letters, numbers, dots, underscores, and hyphens; they name every output file.
+
+To change the workflow itself, clone the repository and run `nextflow run main.nf` from it.
 
 ## When to Use targetasm
 
@@ -74,13 +82,13 @@ For clean single-organism HiFi libraries, running hifiasm directly is usually en
 
 | Parameter | Required | Default | Description |
 | --- | --- | --- | --- |
-| `--reads` | yes | `null` | PacBio HiFi reads, compressed as `.fastq.gz`. |
-| `--gx_db` | yes | `null` | Directory containing the complete FCS-GX database bundle. |
+| `--input` | yes | `null` | Samplesheet (`.csv` or `.tsv`) with columns `sample`, `reads` and optional `target_bases`. |
+| `--gx_db` | yes | `null` | FCS-GX database directory (`all.gxi`, `all.gxs`, ...), not the `all` file prefix used by 0.1.0. |
 | `--tax_id` | yes | `null` | NCBI taxonomy ID used as the target taxon for FCS-GX. |
 | `--outdir` | yes | `.` | Output directory for published files. |
-| `--target_bases` | no | `null` | Number of bases to retain with rasusa before hifiasm reassembly (e.g. `5e9`). |
+| `--target_bases` | no | `null` | Default number of bases to retain with rasusa before hifiasm reassembly (e.g. `5e9`); a samplesheet value overrides it. |
 | `--rasusa_seed` | no | `0` | Random seed for rasusa. |
-| `--threads` | no | `24` | Maximum CPU threads for threaded processes. |
+| `--threads` | no | `24` | CPUs for multi-threaded tasks; also sets their memory (8 GB per thread). See [Resources](#resources). |
 | `--hifiasm_option` | no | `-l 2` | Extra options passed to hifiasm; `--primary` is always added. |
 | `--keep_intermediates` | no | `false` | Publish intermediate assemblies and recruited reads. |
 | `--quality_library` | no | `null` | Local Compleasm lineage library. Enables assembly QC when supplied. |
@@ -89,20 +97,39 @@ For clean single-organism HiFi libraries, running hifiasm directly is usually en
 
 Process resources live in [`conf/base.config`](conf/base.config); tool arguments and publishing rules live in [`conf/modules.config`](conf/modules.config). Override queues, memory, or other site settings with `-c site.config`.
 
+## Resources
+
+| Tasks | CPUs | Memory | Time limit |
+| --- | --- | --- | --- |
+| metaMDBG, minimap2, hifiasm, Compleasm, QUAST | `--threads` | 8 GB per thread (24 threads = 192 GB) | 48 h |
+| FCS-GX screening | `--threads` | 500 GB | 48 h |
+| samtools, FCS-GX cleaning, compression | up to 4 | 8 GB | 8 h |
+| rasusa, file conversion, reports | 1 | 4 GB | 4 h |
+
+Lower `--threads` on smaller machines to reduce memory too. The time limits leave about four times the longest runtimes seen on the downy mildew benchmark (metaMDBG took up to 13 h). A task killed by the scheduler, for example at its time limit, is retried once with twice the time; memory is not increased, so FCS-GX stays at 500 GB.
+
+With the local executor inside a SLURM job, targetasm only uses the job's memory allocation, so request at least 500 GB for the job. Change any of these with a `-c` config, for example:
+
+```groovy
+process {
+    withName: FCSGX_RUNGX  { memory = '700 GB' }
+    withName: METAMDBG_ASM { time = '96h' }
+}
+```
+
 ## Quality Control
 
 Add Compleasm and QUAST summaries to a full workflow run:
 
 ```bash
-nextflow run main.nf \
-  --reads /path/to/sample.fastq.gz \
-  --gx_db /path/to/gx-db-directory \
+nextflow run Yixuan39/targetasm -r 0.2.1 \
+  -profile singularity \
+  --input samplesheet.csv \
+  --gx_db /path/to/fcs-gx-db \
   --tax_id <target_ncbi_tax_id> \
-  --target_bases 5.4e9 \
-  --quality_library /path/to/compleasm_db \
+  --quality_library /path/to/compleasm_library \
   --quality_lineage <busco_lineage> \
-  --outdir results \
-  -profile slurm,apptainer
+  --outdir results
 ```
 
 When QC is enabled, targetasm evaluates the metaMDBG assembly, the first FCS-GX-cleaned assembly, the hifiasm assembly, and the final FCS-GX-cleaned assembly.
@@ -138,8 +165,8 @@ When `--quality_library` and `--quality_lineage` are provided:
 ```text
 results/
   quality/
-    quality_trace.csv
-    quality_final.csv
+    <sample>.quality_trace.csv
+    <sample>.quality_final.csv
 ```
 
 When `--keep_intermediates` is set, targetasm also publishes the metaMDBG draft (`metaMDBG/`), the first FCS-GX-cleaned assembly (`fcs_gx/`), recruited reads (`minimap2/`), subsampled reads (`rasusa/`, if used), and the hifiasm assembly (`hifiasm/`).
@@ -155,5 +182,7 @@ When `--keep_intermediates` is set, targetasm also publishes the metaMDBG draft 
 | `apptainer` | Enable Apptainer containers with automounts. |
 | `conda` | Use Conda environments instead of containers. |
 
-Profiles can be combined, for example `-profile slurm,apptainer`, when running on a SLURM cluster. On the HPC, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources.
+`singularity` works with both SingularityCE and Apptainer, because Apptainer also installs a `singularity` command; use `apptainer` only where the `apptainer` command exists.
+
+Profiles can be combined, for example `-profile slurm,singularity`, when running on a SLURM cluster. On the HPC, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources.
 

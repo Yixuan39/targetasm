@@ -1,0 +1,34 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/Yixuan39/targetasm/main/assets/schema_input.json",
+    "title": "Yixuan39/targetasm samplesheet",
+    "description": "One row per sample: sample name, PacBio HiFi reads and an optional per-sample target_bases.",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+                "errorMessage": "Sample names must start with a letter or number and contain only letters, numbers, dots, underscores and hyphens",
+                "meta": ["id"]
+            },
+            "reads": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.(fastq|fq)(\\.gz)?$",
+                "errorMessage": "Reads must be an existing FASTQ file (.fastq or .fq, optionally gzipped) with no spaces in its path"
+            },
+            "target_bases": {
+                "type": ["integer", "string"],
+                "minimum": 1,
+                "pattern": "^\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                "errorMessage": "target_bases must be a whole number of bases, e.g. 5400000000 or 5.4e9; leave empty to use --target_bases",
+                "meta": ["target_bases"]
+            }
+        },
+        "required": ["sample", "reads"]
+    },
+    "uniqueEntries": ["sample"]
+}

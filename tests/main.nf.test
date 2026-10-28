@@ -24,7 +24,7 @@ nextflow_pipeline {
             def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
             assert versions.contains('RASUSA_READS') == false
             assert versions.contains('COMPLEASM_RUN') == false
-            assert path("$outputDir/quality/quality_final.csv").exists() == false
+            assert path("$outputDir/quality/sample.quality_final.csv").exists() == false
         }
     }
     test('QC False, subsampling True') {
@@ -50,7 +50,7 @@ nextflow_pipeline {
             def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
             assert versions.contains('RASUSA_READS') == true
             assert versions.contains('COMPLEASM_RUN') == false
-            assert path("$outputDir/quality/quality_final.csv").exists() == false
+            assert path("$outputDir/quality/sample.quality_final.csv").exists() == false
         }
     }
     test('QC True, subsampling False') {
@@ -76,9 +76,9 @@ nextflow_pipeline {
             def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
             assert versions.contains('RASUSA_READS') == false
             assert versions.contains('COMPLEASM_RUN') == true
-            assert path("$outputDir/quality/quality_final.csv").exists() == true
-            assert path("$outputDir/quality/quality_trace.csv").readLines().size() == 5
-            assert path("$outputDir/quality/quality_final.csv").text.contains('sample.fasta.gz')
+            assert path("$outputDir/quality/sample.quality_final.csv").exists() == true
+            assert path("$outputDir/quality/sample.quality_trace.csv").readLines().size() == 5
+            assert path("$outputDir/quality/sample.quality_final.csv").text.contains('sample.fasta.gz')
         }
     }
     test('QC True, subsampling True') {
@@ -104,9 +104,9 @@ nextflow_pipeline {
             def versions = path("$outputDir/pipeline_info/software_versions.tsv").text
             assert versions.contains('RASUSA_READS') == true
             assert versions.contains('COMPLEASM_RUN') == true
-            assert path("$outputDir/quality/quality_final.csv").exists() == true
-            assert path("$outputDir/quality/quality_trace.csv").readLines().size() == 5
-            assert path("$outputDir/quality/quality_final.csv").text.contains('sample.fasta.gz')
+            assert path("$outputDir/quality/sample.quality_final.csv").exists() == true
+            assert path("$outputDir/quality/sample.quality_trace.csv").readLines().size() == 5
+            assert path("$outputDir/quality/sample.quality_final.csv").text.contains('sample.fasta.gz')
         }
     }
     test('reject fractional target bases before submitting any tasks') {
@@ -155,7 +155,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir = "$outputDir"
-                reads = System.getenv('TARGETASM_TEST_ROOT') + '/missing.fastq.gz'
+                input = System.getenv('TARGETASM_TEST_ROOT') + '/missing.csv'
             }
         }
         then {
@@ -178,5 +178,53 @@ nextflow_pipeline {
             assert workflow.stderr.join('\n').contains('taxid')
         }
     }
-
+    test('two samples: uncompressed reads and per-sample target_bases') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                input = System.getenv('TARGETASM_TEST_ROOT') + '/multi.csv'
+                target_bases = null
+                quality_library = System.getenv('TARGETASM_TEST_ROOT') + '/library'
+                quality_lineage = 'eukaryota'
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/a.fasta.gz").exists()
+            assert path("$outputDir/b.fasta.gz").exists()
+            // only sample a sets target_bases
+            assert workflow.trace.tasks().findAll { task -> task.name.contains('RASUSA_READS') }.size() == 1
+            assert path("$outputDir/quality/a.quality_final.csv").text.contains('a.fasta.gz')
+            assert path("$outputDir/quality/b.quality_final.csv").text.contains('b.fasta.gz')
+            assert path("$outputDir/quality/b.quality_trace.csv").readLines().size() == 5
+        }
+    }
+    test('reject duplicate sample names before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                input = System.getenv('TARGETASM_TEST_ROOT') + '/duplicate.csv'
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+    test('explain the 0.1.0 --gx_db prefix before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                gx_db = System.getenv('TARGETASM_TEST_ROOT') + '/gxdb/all'
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stderr.join('\n').contains("not the 'all' file prefix")
+        }
+    }
 }

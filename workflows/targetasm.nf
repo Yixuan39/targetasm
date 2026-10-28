@@ -10,26 +10,30 @@ include { MERGE_QUALITY_REPORTS } from '../modules/local/quality_reports'
 
 workflow TARGETASM {
     take:
-    reads
+    ch_reads // [meta, reads]; meta.target_bases is null to keep all recruited reads
     gx_db
     quality_library
-    target_bases
 
     main:
-    def meta = [id: reads.simpleName, single_end: true]
-    def ch_reads = channel.value(tuple(meta, reads))
     METAMDBG_ASM(ch_reads, 'hifi')
     FCS_INITIAL(METAMDBG_ASM.out.contigs, gx_db, params.tax_id)
 
-    // The CLI currently accepts one sample: reads is a value channel and the reference is a queue.
-    MINIMAP2_ALIGN(ch_reads, FCS_INITIAL.out.assembly, true, '', false, false)
+    // Map each sample's original reads back to its own cleaned draft.
+    def ch_mapping = ch_reads
+        .join(FCS_INITIAL.out.assembly, failOnDuplicate: true, failOnMismatch: true)
+        .multiMap { meta, reads, draft ->
+            reads: tuple(meta, reads)
+            draft: tuple(meta, draft)
+        }
+    MINIMAP2_ALIGN(ch_mapping.reads, ch_mapping.draft, true, '', false, false)
     SAMTOOLS_BAM2FQ(MINIMAP2_ALIGN.out.bam, false)
 
-    def ch_reassembly = SAMTOOLS_BAM2FQ.out.reads
-    if (target_bases != null) {
-        RASUSA_READS(ch_reassembly, target_bases, params.rasusa_seed)
-        ch_reassembly = RASUSA_READS.out.reads
+    def ch_recruited = SAMTOOLS_BAM2FQ.out.reads.branch { meta, _fastq ->
+        subsample: meta.target_bases != null
+        keep: true
     }
+    RASUSA_READS(ch_recruited.subsample, params.rasusa_seed)
+    def ch_reassembly = ch_recruited.keep.mix(RASUSA_READS.out.reads)
     HIFIASM(
         ch_reassembly.map { sample, fastq -> tuple(sample, fastq, []) },
         channel.value(tuple([:], [], [])),
@@ -51,25 +55,30 @@ workflow TARGETASM {
     if (params.quality_library) {
         def ch_qc = METAMDBG_ASM.out.contigs
             .map { sample, fasta ->
-                tuple(sample + [id: "${sample.id}.metamdbg", stage: 'metamdbg'], fasta)
+                tuple(sample + [id: "${sample.id}.metamdbg", stage: 'metamdbg', sample_id: sample.id], fasta)
             }
             .mix(
                 FCS_INITIAL.out.assembly.map { sample, fasta ->
-                    tuple(sample + [id: "${sample.id}.fcs_initial", stage: 'fcs_initial'], fasta)
+                    tuple(sample + [id: "${sample.id}.fcs_initial", stage: 'fcs_initial', sample_id: sample.id], fasta)
                 }
             )
             .mix(
                 GFATOOLS_GFA2FA.out.fasta.map { sample, fasta ->
-                    tuple(sample + [id: "${sample.id}.hifiasm", stage: 'hifiasm'], fasta)
+                    tuple(sample + [id: "${sample.id}.hifiasm", stage: 'hifiasm', sample_id: sample.id], fasta)
                 }
             )
             .mix(
                 FCS_FINAL.out.assembly.map { sample, fasta ->
-                    tuple(sample + [id: "${sample.id}.fcs_final", stage: 'fcs_final'], fasta)
+                    tuple(sample + [id: "${sample.id}.fcs_final", stage: 'fcs_final', sample_id: sample.id], fasta)
                 }
             )
         ASSEMBLY_QC(ch_qc, quality_library, params.quality_lineage)
-        MERGE_QUALITY_REPORTS(ASSEMBLY_QC.out.metrics.collect(), "${meta.id}.fasta.gz")
+        // One report per sample once all four stages are measured.
+        MERGE_QUALITY_REPORTS(
+            ASSEMBLY_QC.out.metrics
+                .map { meta, metrics -> tuple(meta.sample_id, metrics) }
+                .groupTuple(size: 4)
+        )
     }
 
     channel.topic('versions')
