@@ -10,18 +10,18 @@ Installed with `nf-core modules install`; each module's source commit is recorde
 in [modules.json](../modules.json). The selected source tree is
 [`56155f73713bc32c5343b59f05d968794c1b596d`](https://github.com/nf-core/modules/tree/56155f73713bc32c5343b59f05d968794c1b596d/modules/nf-core).
 Module source files are kept unchanged. Pipeline flags, resources, publication
-rules and the gfatools environment override are configured separately.
+rules and the metaMDBG, gfatools and Compleasm version overrides are configured separately.
 
 | Existing tool | Community module | Effective version change |
 | --- | --- | --- |
-| metaMDBG | `metamdbg/asm` | 1.2 → 1.4 |
+| metaMDBG | `metamdbg/asm` | Remains 1.2 through a config override since 0.2.1; upstream pins 1.4 |
 | minimap2 | `minimap2/align` | 2.28 → 2.30; also uses samtools 1.23.1 |
 | samtools read extraction | `samtools/bam2fq` | 1.22.1 → 1.24 |
 | hifiasm | `hifiasm` | Remains 0.25.0 |
 | gfatools | `gfatools/gfa2fa` | Remains 0.5.5 through a config override; upstream pins 0.5 |
 | FCS-GX screening | `fcsgx/rungx` | Remains 0.5.5 |
 | FCS-GX cleaning | `fcsgx/cleangenome` | Remains 0.5.5 |
-| Compleasm | `compleasm/run` | 0.2.7 → 0.2.9 |
+| Compleasm | `compleasm/run` | 0.2.7 → 0.2.10 through a config override since 0.2.1; upstream pins 0.2.9 |
 | QUAST | `quast` | Remains 5.3.0, with the upstream container build |
 | Assembly decompression | `gunzip` | Uses the upstream pinned environment |
 | Clean assembly compression | `htslib/bgziptabix` | HTSlib 1.24; BGZF output is gzip compatible |

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `quality/<sample>.quality_final.csv`.
 - Compleasm 0.2.10 replaces the nf-core module's 0.2.9, which crashed on compute
   nodes without internet even with a local library.
+- metaMDBG is back at 0.1.0's 1.2 instead of the nf-core module's 1.4. With 1.4,
+  less of the target genome survived the first FCS-GX screen (MSU1: 43.8 Mb
+  instead of 74.7 Mb), and after subsampling and reassembly the final assemblies
+  lost up to 3.3% of complete BUSCOs and about 40% of their N50.
 - Release tags no longer use a `v` prefix, so `nextflow run Yixuan39/targetasm -r 0.2.1` works.
 
 ### Added
