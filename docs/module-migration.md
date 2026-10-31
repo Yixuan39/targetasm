@@ -2,7 +2,7 @@
 
 The analysis still follows metaMDBG → FCS-GX → read recruitment → optional
 rasusa → hifiasm → FCS-GX, with optional Compleasm and QUAST at four stages.
-0.2.0 still accepted one sample with `--reads`; 0.2.1 replaced it with an `--input` samplesheet.
+The CLI still accepts one sample with `--reads`.
 
 ## Reused modules
 
@@ -10,18 +10,18 @@ Installed with `nf-core modules install`; each module's source commit is recorde
 in [modules.json](../modules.json). The selected source tree is
 [`56155f73713bc32c5343b59f05d968794c1b596d`](https://github.com/nf-core/modules/tree/56155f73713bc32c5343b59f05d968794c1b596d/modules/nf-core).
 Module source files are kept unchanged. Pipeline flags, resources, publication
-rules and the metaMDBG, gfatools and Compleasm version overrides are configured separately.
+rules and the gfatools environment override are configured separately.
 
 | Existing tool | Community module | Effective version change |
 | --- | --- | --- |
-| metaMDBG | `metamdbg/asm` | Remains 1.2 through a config override since 0.2.1; upstream pins 1.4 |
+| metaMDBG | `metamdbg/asm` | 1.2 → 1.4 |
 | minimap2 | `minimap2/align` | 2.28 → 2.30; also uses samtools 1.23.1 |
 | samtools read extraction | `samtools/bam2fq` | 1.22.1 → 1.24 |
 | hifiasm | `hifiasm` | Remains 0.25.0 |
 | gfatools | `gfatools/gfa2fa` | Remains 0.5.5 through a config override; upstream pins 0.5 |
 | FCS-GX screening | `fcsgx/rungx` | Remains 0.5.5 |
 | FCS-GX cleaning | `fcsgx/cleangenome` | Remains 0.5.5 |
-| Compleasm | `compleasm/run` | 0.2.7 → 0.2.10 through a config override since 0.2.1; upstream pins 0.2.9 |
+| Compleasm | `compleasm/run` | 0.2.7 → 0.2.9 |
 | QUAST | `quast` | Remains 5.3.0, with the upstream container build |
 | Assembly decompression | `gunzip` | Uses the upstream pinned environment |
 | Clean assembly compression | `htslib/bgziptabix` | HTSlib 1.24; BGZF output is gzip compatible |
@@ -100,8 +100,8 @@ run on GitHub yet.
 
 This migration does not by itself establish complete nf-core pipeline compliance.
 The parameter schema is now implemented with `nf-schema@2.7.2`, including
-runtime validation and generated help, and 0.2.1 added samplesheet input with
-its schema. Template synchronization, local module/subworkflow metadata, and scientific
+runtime validation and generated help. Template synchronization, samplesheet
+input and its schema, local module/subworkflow metadata, and scientific
 regression data remain separate work before submission. Full pipeline lint
 runs but does not pass: it also expects nf-core organization branding and
 boilerplate, while this project remains `Yixuan39/targetasm`. Some checks in
