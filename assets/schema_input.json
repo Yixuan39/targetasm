@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/Yixuan39/targetasm/main/assets/schema_input.json",
     "title": "Yixuan39/targetasm samplesheet",
-    "description": "One row per sample: sample name, PacBio HiFi reads and an optional per-sample target_bases.",
+    "description": "One row per sample: PacBio HiFi reads, plus an optional sample name (default: the reads file name) and per-sample target_bases.",
     "type": "array",
     "items": {
         "type": "object",
@@ -28,7 +28,6 @@
                 "meta": ["target_bases"]
             }
         },
-        "required": ["sample", "reads"]
-    },
-    "uniqueEntries": ["sample"]
+        "required": ["reads"]
+    }
 }

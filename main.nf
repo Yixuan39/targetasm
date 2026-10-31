@@ -31,8 +31,17 @@ workflow {
     validateParameters()
     def default_bases = targetBases(params.target_bases, '--target_bases')
     def samples = samplesheetToList(params.input, "${projectDir}/assets/schema_input.json").collect { meta, reads ->
-        def bases = targetBases(meta.target_bases, "target_bases for sample ${meta.id}") ?: default_bases
-        tuple(meta + [single_end: true, target_bases: bases], reads)
+        // Without a sample name, name the sample after its reads (isolate1.fastq.gz -> isolate1).
+        def id = meta.id ?: reads.simpleName
+        if (!(id ==~ /[A-Za-z0-9][A-Za-z0-9_.-]*/)) {
+            error("Sample name '${id}' (from ${reads.name}) must start with a letter or number and contain only letters, numbers, dots, underscores and hyphens; set it in the sample column")
+        }
+        def bases = targetBases(meta.target_bases, "target_bases for sample ${id}") ?: default_bases
+        tuple(meta + [id: id, single_end: true, target_bases: bases], reads)
+    }
+    def duplicates = samples.countBy { meta, _reads -> meta.id }.findAll { _id, n -> n > 1 }.keySet()
+    if (duplicates) {
+        error("Duplicate sample names: ${duplicates.join(', ')}; give each row a unique sample name")
     }
     def gx_db = file(params.gx_db, checkIfExists: true)
     def quality_library = params.quality_library ? file(params.quality_library, checkIfExists: true) : []

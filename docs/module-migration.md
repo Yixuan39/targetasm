@@ -2,7 +2,7 @@
 
 The analysis still follows metaMDBG → FCS-GX → read recruitment → optional
 rasusa → hifiasm → FCS-GX, with optional Compleasm and QUAST at four stages.
-The CLI still accepts one sample with `--reads`.
+0.2.0 still accepted one sample with `--reads`; 0.2.1 replaced it with an `--input` samplesheet.
 
 ## Reused modules
 
@@ -100,8 +100,8 @@ run on GitHub yet.
 
 This migration does not by itself establish complete nf-core pipeline compliance.
 The parameter schema is now implemented with `nf-schema@2.7.2`, including
-runtime validation and generated help. Template synchronization, samplesheet
-input and its schema, local module/subworkflow metadata, and scientific
+runtime validation and generated help, and 0.2.1 added samplesheet input with
+its schema. Template synchronization, local module/subworkflow metadata, and scientific
 regression data remain separate work before submission. Full pipeline lint
 runs but does not pass: it also expects nf-core organization branding and
 boilerplate, while this project remains `Yixuan39/targetasm`. Some checks in

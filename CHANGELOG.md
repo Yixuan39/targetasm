@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.1] - Unreleased
 
 ### Changed
-- `--input` samplesheet (`sample,reads,target_bases`) replaces `--reads`, so one
-  run can assemble several samples; `target_bases` can be set per sample.
+- `--input` samplesheet replaces `--reads`, so one run can assemble several
+  samples. Only `reads` is required; samples are named after their reads file
+  unless a `sample` column names them, and `target_bases` can be set per sample.
 - Reads may be uncompressed (`.fastq`/`.fq`) as well as gzipped.
 - QC reports are written per sample as `quality/<sample>.quality_trace.csv` and
   `quality/<sample>.quality_final.csv`.

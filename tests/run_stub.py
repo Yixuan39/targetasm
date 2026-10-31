@@ -26,6 +26,7 @@ with tempfile.TemporaryDirectory(prefix='targetasm-stub-') as directory:
             ','.join([fields[0], str(root / fields[1])] + fields[2:]) for fields in (row.split(',') for row in rows)
         ]
         (root / name).write_text('\n'.join(lines) + '\n')
+    (root / 'reads_only.csv').write_text(f"reads\n{root / 'sample.fastq.gz'}\n{root / 'reads.fq'}\n")
     mock = root / 'version_only.py'
     mock.write_text('''#!/usr/bin/env python3
 import gzip, pathlib, sys

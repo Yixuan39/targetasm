@@ -35,13 +35,15 @@ were unchanged after all four QC runs.
 
 ## Reproduce on this machine
 
-From the repository root:
+The recorded run passed the reads with 0.2.0's `--reads`; since 0.2.1 they go
+in a samplesheet. From the repository root:
 
 ```bash
 mkdir -p runs/sc1982-smoke/input
 rasusa reads --bases 1gb --seed 1982 \
     --output runs/sc1982-smoke/input/SC1982.fastq.gz \
     /path/to/Pseudoperonospora_cubensis_SC1982.fastq.gz
+printf 'reads\nruns/sc1982-smoke/input/SC1982.fastq.gz\n' > runs/sc1982-smoke/samplesheet.csv
 
 nextflow -log runs/sc1982-smoke/nextflow.log run main.nf \
     -profile docker \
@@ -62,7 +64,7 @@ docker.runOptions = '--platform linux/amd64'
 
 ```json
 {
-  "reads": "runs/sc1982-smoke/input/SC1982.fastq.gz",
+  "input": "runs/sc1982-smoke/samplesheet.csv",
   "gx_db": "runs/sc1982-smoke/gxdb-test",
   "tax_id": 4762,
   "outdir": "runs/sc1982-smoke/results",

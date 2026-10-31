@@ -200,6 +200,20 @@ nextflow_pipeline {
             assert path("$outputDir/quality/b.quality_trace.csv").readLines().size() == 5
         }
     }
+    test('name samples after their reads when the sample column is missing') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                input = System.getenv('TARGETASM_TEST_ROOT') + '/reads_only.csv'
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/sample.fasta.gz").exists()
+            assert path("$outputDir/reads.fasta.gz").exists()
+        }
+    }
     test('reject duplicate sample names before submitting any tasks') {
         options '-stub-run'
         when {
@@ -211,6 +225,7 @@ nextflow_pipeline {
         then {
             assert !workflow.success
             assert workflow.trace.tasks().size() == 0
+            assert workflow.stdout.join('\n').contains('Duplicate sample names: a')
         }
     }
     test('explain the 0.1.0 --gx_db prefix before submitting any tasks') {

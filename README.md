@@ -8,7 +8,7 @@ The workflow is reference-independent with respect to the target genome. It firs
 
 The motivating benchmark was contaminated PacBio HiFi sequencing of obligate biotrophic oomycetes, but the strategy is not oomycete-specific. Any eukaryotic target with an appropriate NCBI taxonomy ID for FCS-GX can be used.
 
-Since 0.2.0, targetasm is built on 11 pinned nf-core modules. See the [module migration notes](docs/module-migration.md) for tool versions, behavior changes, and the code that remains local.
+Since 0.2.0, targetasm is built on 11 pinned nf-core modules. metaMDBG stays at 1.2, which recovers more of the target genome than the module's 1.4, and Compleasm uses 0.2.10. See the [module migration notes](docs/module-migration.md) for tool versions, behavior changes, and the code that remains local.
 
 ## Workflow
 
@@ -42,12 +42,12 @@ Nextflow downloads the workflow from GitHub; pin a release with `-r`:
 nextflow run Yixuan39/targetasm -r 0.2.1 --help
 ```
 
-Describe one sample per row in a samplesheet:
+List one sample per row in a samplesheet:
 
 ```csv
-sample,reads,target_bases
-isolate1,/path/to/isolate1.fastq.gz,5.4e9
-isolate2,/path/to/isolate2.fastq,
+reads,target_bases
+/path/to/isolate1.fastq.gz,5.4e9
+/path/to/isolate2.fastq,
 ```
 
 Then run:
@@ -63,7 +63,7 @@ nextflow run Yixuan39/targetasm -r 0.2.1 \
 
 Set `--tax_id` to the NCBI taxonomy ID for the target organism or target clade. `target_bases` is the number of recruited bases kept for hifiasm: the expected genome size multiplied by the desired coverage. For example, a 90 Mb genome at 60x coverage is `5.4e9`. Leave it empty to use `--target_bases`, or to use all mapped reads when `--target_bases` is not set.
 
-Sample names must start with a letter or number and contain only letters, numbers, dots, underscores, and hyphens; they name every output file.
+Each sample is named after its reads file (`isolate1.fastq.gz` → `isolate1`), and the name prefixes every output file. To choose different names, add a `sample` column. Names must be unique, start with a letter or number, and contain only letters, numbers, dots, underscores, and hyphens.
 
 To change the workflow itself, clone the repository and run `nextflow run main.nf` from it.
 
@@ -82,7 +82,7 @@ For clean single-organism HiFi libraries, running hifiasm directly is usually en
 
 | Parameter | Required | Default | Description |
 | --- | --- | --- | --- |
-| `--input` | yes | `null` | Samplesheet (`.csv` or `.tsv`) with columns `sample`, `reads` and optional `target_bases`. |
+| `--input` | yes | `null` | Samplesheet (`.csv` or `.tsv`) with a `reads` column and optional `sample` and `target_bases` columns. |
 | `--gx_db` | yes | `null` | FCS-GX database directory (`all.gxi`, `all.gxs`, ...), not the `all` file prefix used by 0.1.0. |
 | `--tax_id` | yes | `null` | NCBI taxonomy ID used as the target taxon for FCS-GX. |
 | `--outdir` | yes | `.` | Output directory for published files. |
@@ -178,11 +178,9 @@ When `--keep_intermediates` is set, targetasm also publishes the metaMDBG draft 
 | `standard` | Local execution. |
 | `slurm` | SLURM execution. |
 | `docker` | Enable Docker containers. |
-| `singularity` | Enable Singularity containers with automounts. |
+| `singularity` | Enable Singularity containers with automounts; also works with Apptainer. |
 | `apptainer` | Enable Apptainer containers with automounts. |
 | `conda` | Use Conda environments instead of containers. |
-
-`singularity` works with both SingularityCE and Apptainer, because Apptainer also installs a `singularity` command; use `apptainer` only where the `apptainer` command exists.
 
 Profiles can be combined, for example `-profile slurm,singularity`, when running on a SLURM cluster. On the HPC, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources.
 

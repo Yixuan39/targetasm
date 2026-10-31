@@ -12,8 +12,8 @@
             "properties": {
                 "input": {
                     "type": "string",
-                    "description": "Samplesheet (CSV or TSV) with columns sample, reads and optional target_bases.",
-                    "help_text": "One row per sample. `reads` is a PacBio HiFi FASTQ file (.fastq/.fq, optionally gzipped). `target_bases` overrides --target_bases for that sample; leave it empty to use --target_bases.",
+                    "description": "Samplesheet (CSV or TSV) with a reads column and optional sample and target_bases columns.",
+                    "help_text": "One row per sample. `reads` is a PacBio HiFi FASTQ file (.fastq/.fq, optionally gzipped). `sample` names the outputs; leave it out to use the reads file name (isolate1.fastq.gz -> isolate1). `target_bases` overrides --target_bases for that sample; leave it empty to use --target_bases.",
                     "format": "file-path",
                     "exists": true,
                     "schema": "assets/schema_input.json",
