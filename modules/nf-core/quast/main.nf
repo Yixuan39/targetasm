@@ -38,9 +38,18 @@ process QUAST {
         ${consensus.join(' ')}
 
     ln -s ${prefix}/report.tsv ${prefix}.tsv
-    [ -f  ${prefix}/contigs_reports/all_alignments_transcriptome.tsv ] && ln -s ${prefix}/contigs_reports/all_alignments_transcriptome.tsv ${prefix}_transcriptome.tsv
-    [ -f  ${prefix}/contigs_reports/misassemblies_report.tsv         ] && ln -s ${prefix}/contigs_reports/misassemblies_report.tsv ${prefix}_misassemblies.tsv
-    [ -f  ${prefix}/contigs_reports/unaligned_report.tsv             ] && ln -s ${prefix}/contigs_reports/unaligned_report.tsv ${prefix}_unaligned.tsv
+    # A missing optional report must not fail the task. Under bash -euo pipefail
+    # the last `[ -f missing ] && ln` exits 1. QUAST omits these files when no
+    # reference is given, which is how ASSEMBLY_QC calls QUAST.
+    if [ -f ${prefix}/contigs_reports/all_alignments_transcriptome.tsv ]; then
+        ln -s ${prefix}/contigs_reports/all_alignments_transcriptome.tsv ${prefix}_transcriptome.tsv
+    fi
+    if [ -f ${prefix}/contigs_reports/misassemblies_report.tsv ]; then
+        ln -s ${prefix}/contigs_reports/misassemblies_report.tsv ${prefix}_misassemblies.tsv
+    fi
+    if [ -f ${prefix}/contigs_reports/unaligned_report.tsv ]; then
+        ln -s ${prefix}/contigs_reports/unaligned_report.tsv ${prefix}_unaligned.tsv
+    fi
 
     """
 

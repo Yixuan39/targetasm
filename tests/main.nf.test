@@ -228,6 +228,47 @@ nextflow_pipeline {
             assert workflow.stdout.join('\n').contains('Duplicate sample names: a')
         }
     }
+    test('reject an FCS-GX directory without database files before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                gx_db = System.getenv('TARGETASM_TEST_ROOT') + '/gxdb_empty'
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stdout.join('\n').contains('all.gxi and all.gxs')
+        }
+    }
+    test('reject an FCS-GX index without its sequence file before submitting any tasks') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                gx_db = System.getenv('TARGETASM_TEST_ROOT') + '/gxdb_index_only'
+            }
+        }
+        then {
+            assert !workflow.success
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stdout.join('\n').contains('missing all.gxs')
+        }
+    }
+    test('accept the NCBI test-only database filenames') {
+        options '-stub-run'
+        when {
+            params {
+                outdir = "$outputDir"
+                gx_db = System.getenv('TARGETASM_TEST_ROOT') + '/gxdb_testonly'
+            }
+        }
+        then {
+            assert workflow.success
+            assert path("$outputDir/sample.fasta.gz").exists()
+        }
+    }
     test('explain the 0.1.0 --gx_db prefix before submitting any tasks') {
         options '-stub-run'
         when {

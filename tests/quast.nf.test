@@ -2,7 +2,7 @@ nextflow_process {
     name 'targetasm QUAST without a reference'
     script '../modules/nf-core/quast/main.nf'
     process 'QUAST'
-    config '../conf/modules.config'
+    config './quast.config'
 
     test('emit a parseable single-assembly report') {
         when {

@@ -16,18 +16,17 @@
                     "help_text": "One row per sample. `reads` is a PacBio HiFi FASTQ file (.fastq/.fq, optionally gzipped). `sample` names the outputs; leave it out to use the reads file name (isolate1.fastq.gz -> isolate1). `target_bases` overrides --target_bases for that sample; leave it empty to use --target_bases.",
                     "format": "file-path",
                     "exists": true,
-                    "schema": "assets/schema_input.json",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.(csv|tsv)$",
                     "errorMessage": "The samplesheet must be an existing .csv or .tsv file with no spaces in its path"
                 },
                 "gx_db": {
                     "type": "string",
-                    "description": "FCS-GX database directory (all.gxi, all.gxs, ...). Download: https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart",
-                    "help_text": "The complete database is about 470 GB and FCS-GX needs about 500 GB of RAM to screen against it. Since 0.2.0 this is the directory itself, not the `all` file prefix used by 0.1.0.",
+                    "description": "FCS-GX database directory containing all.gxi and all.gxs, or test-only.gxi and test-only.gxs. Download: https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart",
+                    "help_text": "The complete database is about 470 GB and FCS-GX needs about 500 GB of RAM to screen against it. Since 0.2.0 this is the directory itself, not the `all` file prefix used by 0.1.0. The directory is checked for exactly one .gxi/.gxs pair before any task starts. NCBI's test-only database keeps the test-only.* names.",
                     "format": "directory-path",
                     "exists": true,
-                    "errorMessage": "--gx_db must be an existing directory that contains the FCS-GX database (all.gxi, all.gxs, ...), not the 'all' file prefix used by targetasm 0.1.0. Download: https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart"
+                    "errorMessage": "--gx_db must be an existing directory that contains all.gxi and all.gxs, or test-only.gxi and test-only.gxs, not the 'all' file prefix used by targetasm 0.1.0. Download: https://github.com/ncbi/fcs/wiki/FCS-GX-quickstart"
                 },
                 "tax_id": {
                     "type": "integer",
