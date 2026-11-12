@@ -5,6 +5,29 @@ All notable changes to `targetasm` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `test` profile runs a functional smoke test on the first 1,000 reads of the
+  public *Peronospora effusa* UA202013 HiFi run (PRJNA745455 / SRR15142133).
+  The reads and an example samplesheet are in the repository. `--gx_db` is
+  still required. NCBI's test-only database only checks that the pipeline
+  runs; scientific results need the complete FCS-GX database and `-r 0.1.0`
+  for the paper.
+- `--gx_db` is rejected before any task starts unless the directory contains
+  exactly one FCS-GX index pair (`all.gxi` with `all.gxs`, or `test-only.gxi`
+  with `test-only.gxs`).
+
+### Fixed
+- QUAST no longer fails when no reference is given. The optional report links
+  were a final `[ -f missing ] && ln` under `bash -euo pipefail`, so a missing
+  file exited 1. Assembly QC does not pass a reference.
+- `gfatools` 0.5.5 uses its Galaxy singularity image under `-profile singularity`,
+  the same way the other overridden containers do.
+
+### Changed
+- Result `*.csv` files stay ignored. Samplesheets under `assets/` are tracked.
+
 ## [0.2.1] - 2026-11-01
 
 ### Changed

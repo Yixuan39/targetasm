@@ -11,6 +11,14 @@ ROOT = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix='targetasm-stub-') as directory:
     root = Path(directory)
     (root / 'gxdb').mkdir()
+    for name in ('all.gxi', 'all.gxs'):
+        (root / 'gxdb' / name).write_bytes(b'')
+    (root / 'gxdb_empty').mkdir()
+    (root / 'gxdb_testonly').mkdir()
+    for name in ('test-only.gxi', 'test-only.gxs'):
+        (root / 'gxdb_testonly' / name).write_bytes(b'')
+    (root / 'gxdb_index_only').mkdir()
+    (root / 'gxdb_index_only' / 'all.gxi').write_bytes(b'')
     (root / 'library').mkdir()
     with gzip.open(root / 'sample.fastq.gz', 'wt') as handle:
         handle.write('@read1\nACGT\n+\nIIII\n')
@@ -57,4 +65,12 @@ else:
         cwd=root, env=dict(env, SLURM_MEM_PER_NODE='512'), capture_output=True, text=True,
     )
     assert slurm.returncode != 0 and 'exceeds available memory' in slurm.stdout + slurm.stderr, slurm.stdout + slurm.stderr
+
+    # Launch from a directory that does not contain the reads, as `nextflow run <repo> -profile test` does.
+    bundled = subprocess.run(
+        ['nextflow', 'run', str(ROOT / 'main.nf'), '-stub-run', '-c', str(ROOT / 'tests/nextflow.config'),
+         '--input', str(ROOT / 'assets/samplesheet_test.csv'), '--outdir', str(root / 'bundled-out')],
+        cwd=root, env=env, capture_output=True, text=True,
+    )
+    assert bundled.returncode == 0 and (root / 'bundled-out' / 'UA202013.fasta.gz').is_file(), bundled.stdout + bundled.stderr
     raise SystemExit(result.returncode)

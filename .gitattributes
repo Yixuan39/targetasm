@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# The smoke-test reads are hashed; do not rewrite them as text.
+assets/testdata/*.fastq.gz binary
+assets/testdata/*.fq.gz binary

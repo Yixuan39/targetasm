@@ -54,15 +54,20 @@ rsconnect/
 *.out
 .gitattributes
 
-# large input files
+# large input files. The public UA202013 smoke-test subset is tracked.
 *.fastq
 *.fastq.gz
 *.fq.gz
+!assets/testdata/*.fastq.gz
+!assets/testdata/*.fq.gz
 *reference*
 
 
 *junk
+# Result tables. Samplesheets shipped under assets/ stay tracked.
 *.csv
+!assets/*.csv
+!assets/**/*.csv
 *.tmp*
 
 # for this new repo

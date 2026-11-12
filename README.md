@@ -42,6 +42,8 @@ Nextflow downloads the workflow from GitHub; pin a release with `-r`:
 nextflow run Yixuan39/targetasm -r 0.2.1 --help
 ```
 
+The Genome Biology software article used tag `0.1.0`. Release `0.2.1` is a later update; reproduce the paper with `-r 0.1.0`.
+
 List one sample per row in a samplesheet:
 
 ```csv
@@ -83,7 +85,7 @@ For clean single-organism HiFi libraries, running hifiasm directly is usually en
 | Parameter | Required | Default | Description |
 | --- | --- | --- | --- |
 | `--input` | yes | `null` | Samplesheet (`.csv` or `.tsv`) with a `reads` column and optional `sample` and `target_bases` columns. |
-| `--gx_db` | yes | `null` | FCS-GX database directory (`all.gxi`, `all.gxs`, ...), not the `all` file prefix used by 0.1.0. |
+| `--gx_db` | yes | `null` | FCS-GX database directory. It must contain `all.gxi` and `all.gxs`, or `test-only.gxi` and `test-only.gxs`. This is the directory, not the `all` file prefix used by 0.1.0. |
 | `--tax_id` | yes | `null` | NCBI taxonomy ID used as the target taxon for FCS-GX. |
 | `--outdir` | yes | `.` | Output directory for published files. |
 | `--target_bases` | no | `null` | Default number of bases to retain with rasusa before hifiasm reassembly (e.g. `5e9`); a samplesheet value overrides it. |
@@ -181,6 +183,54 @@ When `--keep_intermediates` is set, targetasm also publishes the metaMDBG draft 
 | `singularity` | Enable Singularity containers with automounts; also works with Apptainer. |
 | `apptainer` | Enable Apptainer containers with automounts. |
 | `conda` | Use Conda environments instead of containers. |
+| `test` | Functional smoke test on the public UA202013 subset. Supply `--gx_db`. See [Functional test](#functional-test). |
 
-Profiles can be combined, for example `-profile slurm,singularity`, when running on a SLURM cluster. On the HPC, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources.
+Profiles can be combined, for example `-profile slurm,singularity`, when running on a SLURM cluster. On the HPC, the `slurm` profile is recommended because only the FCS-GX screening steps require high-memory nodes, while the remaining workflow steps can run with ordinary scheduler resources. Combine `test` with an engine profile, for example `-profile test,docker`.
+
+## Functional test
+
+The `test` profile is a functional smoke test of the whole pipeline. It shows that each step runs. It does not measure contamination or assembly quality: those results need the complete FCS-GX database and the full read set. Tag `0.2.1` does not contain this test; use a clone of this revision, or `-r` of the release that includes it. The paper's results remain `-r 0.1.0`.
+
+The reads are the first 1,000 records of the public PacBio HiFi run for *Peronospora effusa* isolate UA202013 (BioProject [PRJNA745455](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA745455), run [SRR15142133](https://www.ncbi.nlm.nih.gov/sra/SRR15142133); Fletcher et al. 2022, [doi:10.1094/MPMI-09-21-0227-R](https://doi.org/10.1094/MPMI-09-21-0227-R)). SRA submitted that run as a Q20 FASTQ. They are stored at `assets/testdata/UA202013.fastq.gz` (1,000 reads, 7,289,312 bases, SHA-256 `43a87a5ddafcea53a1df2d8a8130549e30ce44c3043f8034418310eb0a8d6b75`). The example samplesheet is [`assets/samplesheet_test.csv`](assets/samplesheet_test.csv). No other isolate is included. `python3 assets/fetch_ua202013_test_reads.py --check` confirms the file; without `--check`, the script rebuilds it from ENA.
+
+Download NCBI's [test-only FCS-GX database](https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/FCS/database/test-only/test-only.manifest) (about 4.6 GB) and check each file against that manifest:
+
+```bash
+python3 assets/fetch_fcsgx_test_db.py gxdb-test
+```
+
+The files keep their `test-only.*` names. From a clone, with Docker (on Apple Silicon the `test` profile selects `linux/amd64`):
+
+```bash
+nextflow run main.nf \
+  -profile test,docker \
+  --gx_db "$PWD/gxdb-test" \
+  --outdir results
+```
+
+From GitHub, pin the revision that contains this test:
+
+```bash
+nextflow run Yixuan39/targetasm -r <version> \
+  -profile test,docker \
+  --gx_db /path/to/gxdb-test \
+  --outdir results
+```
+
+The profile sets the samplesheet, `--tax_id 4762` (Oomycota), `--target_bases 100000000`, `--rasusa_seed 1982`, `--threads 4`, and hifiasm `-l 2 -f 0`, and caps each task at 4 CPUs and 6 GB. `--gx_db` is the only parameter you still supply. `--outdir` is optional; the default is the launch directory. Singularity, Apptainer, or Conda can replace Docker (`-profile test,singularity`).
+
+A completed run publishes:
+
+```text
+results/
+  UA202013.fasta.gz
+  fcs_gx/
+    UA202013.fcs_initial.fcs_gx_report.txt
+    UA202013.fcs_final.fcs_gx_report.txt
+  pipeline_info/
+    execution_trace.tsv
+    software_versions.tsv
+```
+
+The `test` profile's 6 GB cap fits the test-only database. A run against the complete database needs the default 500 GB FCS-GX request, so use the commands in [Quick Start](#quick-start) for that, with `-r 0.1.0` when the goal is to reproduce the paper.
 

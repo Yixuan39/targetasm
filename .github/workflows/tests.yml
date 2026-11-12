@@ -25,6 +25,8 @@ jobs:
         run: nextflow lint main.nf workflows subworkflows/local modules/local conf nextflow.config
       - name: Check report parsing
         run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Check the committed UA202013 subset
+        run: python3 assets/fetch_ua202013_test_reads.py --check
       - name: Check report container runtime
         run: |
           report_images=$(sed -n "s/^    container '\(.*\)'$/\1/p" modules/local/quality_reports.nf | sort -u)
@@ -42,3 +44,5 @@ jobs:
           sudo apt-get install -y samtools tabix
       - name: Check real read filtering
         run: nf-test test tests/filter.nf.test --ci
+      - name: Check QUAST without a reference
+        run: nf-test test tests/quast.nf.test --profile docker --ci
